@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SLID Permit And ETC Full UAT Testing Document</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #111827;
+      --muted: #526174;
+      --line: #dfe6ef;
+      --soft: #eef3f8;
+      --accent: #0f5132;
+      --accent-dark: #14532d;
+      --warn-bg: #fff7ed;
+      --warn-border: #fed7aa;
+      --warn-text: #9a3412;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    .page {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    .hero, .panel, article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+    }
+    .hero { padding: 28px; }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand-row img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px;
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, h4 {
+      color: var(--ink);
+      line-height: 1.18;
+      margin: 0 0 14px;
+      letter-spacing: 0;
+    }
+    h1 { font-size: clamp(30px, 4vw, 44px); }
+    h2 { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 24px; }
+    h3 { margin-top: 24px; font-size: 18px; }
+    p { margin: 0 0 16px; color: var(--muted); }
+    code {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: #1f2937;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .92em;
+      font-weight: 700;
+      padding: 1px 6px;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .metric {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .metric strong { display: block; margin-top: 6px; font-size: 17px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 6px;
+      background: #111827;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 800;
+      padding: 10px 14px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      margin-top: 24px;
+    }
+    .toc {
+      position: sticky;
+      top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+    }
+    .toc h2 { margin: 0 0 10px; padding: 0; border: 0; font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .toc ul { list-style: none; padding: 0; margin: 0; }
+    .toc li + li { margin-top: 8px; }
+    .toc a { color: #263244; display: block; font-size: 14px; font-weight: 700; text-decoration: none; }
+    .toc a:hover { color: var(--accent-dark); text-decoration: underline; }
+    .content { display: grid; gap: 18px; }
+    article { padding: 26px; overflow: hidden; }
+    article > h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+    ul, ol { color: var(--muted); padding-left: 24px; margin: 0 0 18px; }
+    li + li { margin-top: 6px; }
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: 8px;
+      color: var(--warn-text);
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; margin: 16px 0 24px; }
+    table { width: 100%; border-collapse: collapse; min-width: 820px; background: #fff; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #f8fafc; color: #344256; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; max-height: none; }
+      .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero, article { padding: 20px; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 20px, 1220px); padding-top: 18px; }
+      .brand-row { align-items: flex-start; }
+      .meta { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .hero, article { border: 0; box-shadow: none; border-radius: 0; }
+      .layout { display: block; }
+      .toc, .actions { display: none; }
+      h2 { page-break-after: avoid; }
+      table { min-width: 0; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="brand-row">
+        <img src="../public/images/slid-logo.png" alt="SLID logo">
+        <div>
+          <p class="eyebrow">Sierra Leone Immigration Department</p>
+          <h1>Permit And ETC Full UAT Testing Document</h1>
+          <p>Complete role-based UAT pack for validating permit processing, NRA receipt payment, WanGov/GovPay payment, Emergency Travel Certificate application, HQ review, audit, reconciliation, security, and go-live readiness.</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="metric"><span>Environment</span><strong>UAT / Staging</strong></div>
+        <div class="metric"><span>Staff Types</span><strong>8 titles</strong></div>
+        <div class="metric"><span>Public Flow</span><strong>ETC applicant</strong></div>
+        <div class="metric"><span>Format</span><strong>Print-ready HTML</strong></div>
+      </div>
+      <div class="actions"><button type="button" onclick="window.print()">Print / Save PDF</button></div>
+    </section>
+
+    <div class="layout">
+      <nav class="toc" aria-label="Table of contents">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#scope">Scope</a></li>
+          <li><a href="#entry">UAT Entry Criteria</a></li>
+          <li><a href="#users">UAT Users</a></li>
+          <li><a href="#recording">Recording Template</a></li>
+          <li><a href="#journeys">Functional Journeys</a></li>
+          <li><a href="#matrix">Role-Based Matrix</a></li>
+          <li><a href="#technical">Technical Regression</a></li>
+          <li><a href="#security">Security And OWASP</a></li>
+          <li><a href="#smoke">Smoke Test Sheet</a></li>
+          <li><a href="#exit">Exit Criteria</a></li>
+          <li><a href="#signoff">Go-Live Sign-Off</a></li>
+        </ul>
+      </nav>
+
+      <div class="content">
+        <article id="scope">
+          <h2>Scope</h2>
+          <p>This UAT pack proves that the platform is ready for operational pilot or production readiness review. It focuses on the permit and Emergency Travel Certificate scope currently agreed with Sierra Leone Immigration Department.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>In scope</th><th>Must pass</th></tr></thead>
+              <tbody>
+                <tr><td>Airport permit processing</td><td>Application capture, passport review, payment handoff, approval, issuance, PDF, QR verification.</td></tr>
+                <tr><td>NRA receipt payment</td><td>Receipt upload/camera capture, printed receipt number, duplicate receipt prevention, reconciliation.</td></tr>
+                <tr><td>WanGov/GovPay</td><td>ETC payment only, plus optional permit digital payment when credentials are enabled.</td></tr>
+                <tr><td>Emergency Travel Certificate</td><td>Public application, passport upload/MRZ fallback, save and continue, payment, HQ review, status/email.</td></tr>
+                <tr><td>Operations and oversight</td><td>Dashboards, expiry reports, audit logs, transactions, reconciliation, role-based read-only views.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Later-phase integrations such as live Interpol/watchlist, Timatic/IATA rules, biometric or ePassport chip verification remain plugin-ready but must be separately certified before production use.</p>
+        </article>
+
+        <article id="entry">
+          <h2>UAT Entry Criteria</h2>
+          <ul>
+            <li>UAT environment is separate from development and production.</li>
+            <li>Latest database migrations run successfully.</li>
+            <li>Seed data exists for airports, desks, users, countries, nationalities, purposes, and points of entry.</li>
+            <li>SMTP or mail trap is configured.</li>
+            <li>WanGov/GovPay sandbox is configured for ETC payment tests.</li>
+            <li>Test passport images and test receipt images are approved for UAT use.</li>
+            <li>Real citizen data is not used unless explicitly approved by SLID policy.</li>
+            <li>Automated test baseline is green or known skips are accepted.</li>
+          </ul>
+        </article>
+
+        <article id="users">
+          <h2>UAT Users</h2>
+          <div class="notice">Passwords must be issued by the UAT test lead. Do not record production passwords in this document.</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Email / actor</th><th>Role</th><th>Scope</th><th>Main test area</th></tr></thead>
+              <tbody>
+                <tr><td><code>admin@immigration.gov.sl</code></td><td>System Administrator</td><td>National</td><td>User setup, workflow, reference data, devices, security gates.</td></tr>
+                <tr><td><code>hq@immigration.gov.sl</code></td><td>HQ Administrator</td><td>National</td><td>HQ reports, ETC review, reconciliation, revocation, audit.</td></tr>
+                <tr><td><code>manager.fna@immigration.gov.sl</code></td><td>Airport Manager</td><td>FNA</td><td>Airport oversight, approval, revocation, reports, devices.</td></tr>
+                <tr><td><code>supervisor.fna@immigration.gov.sl</code></td><td>Shift Supervisor</td><td>FNA</td><td>Review, approval, waiver, cancellation, reprint.</td></tr>
+                <tr><td><code>officer1.fna@immigration.gov.sl</code></td><td>Visa Processing Officer</td><td>FNA desk 1</td><td>Application capture, payment handoff, permit issuance.</td></tr>
+                <tr><td><code>officer2.fna@immigration.gov.sl</code></td><td>Visa Processing Officer</td><td>FNA desk 2</td><td>Desk separation and same-airport tests.</td></tr>
+                <tr><td><code>payment.fna@immigration.gov.sl</code></td><td>Payment Officer</td><td>FNA payments</td><td>NRA receipt capture, invoice payment confirmation, payment-only access.</td></tr>
+                <tr><td><code>audit@immigration.gov.sl</code></td><td>Compliance Auditor</td><td>National read-only</td><td>Audit, reconciliation, negative mutation tests.</td></tr>
+                <tr><td><code>officer.boa@immigration.gov.sl</code></td><td>Visa Processing Officer</td><td>BOA</td><td>Cross-airport access denial.</td></tr>
+                <tr><td>Public applicant</td><td>No account</td><td>Public</td><td>ETC application and status flow.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="recording">
+          <h2>Recording Template</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Test ID</th><th>Role</th><th>Scenario</th><th>Tester</th><th>Date</th><th>Actual result</th><th>Pass/Fail</th><th>Defect ID</th></tr></thead>
+              <tbody>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>P0 and P1 defects block go-live. P2 defects require owner acceptance if deferred. P3 defects may be deferred with approval.</p>
+        </article>
+
+        <article id="journeys">
+          <h2>Functional Journeys</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Journey</th><th>Primary actor</th><th>Expected pass condition</th></tr></thead>
+              <tbody>
+                <tr><td>J01</td><td>System administrator prepares UAT</td><td>System Administrator</td><td>Users, titles, airports, desks, devices, workflow, and audit are ready.</td></tr>
+                <tr><td>J02</td><td>Officer creates permit application</td><td>Visa Processing Officer</td><td>Passport data, date parts, nationality, carrier, travel details, and traveler history save without duplicate crashes.</td></tr>
+                <tr><td>J03</td><td>NRA receipt payment</td><td>Officer / Payment Officer</td><td>Receipt image and number are captured, payment becomes paid, duplicate receipt is rejected.</td></tr>
+                <tr><td>J04</td><td>WanGov/GovPay payment</td><td>Provider / HQ</td><td>Valid callback pays once; replay, bad secret, and mismatch are rejected.</td></tr>
+                <tr><td>J05</td><td>Supervisor review and permit issue</td><td>Shift Supervisor / Officer</td><td>Permit cannot issue before approval and payment; PDF and QR verify correctly.</td></tr>
+                <tr><td>J06</td><td>Extension, reprint, revocation</td><td>Supervisor / Manager / HQ</td><td>Eligibility, reason, authorization, audit, and verification state are enforced.</td></tr>
+                <tr><td>J07</td><td>Public ETC application</td><td>Public applicant</td><td>Applicant completes ETC without account, MRZ fallback works, payment/status works.</td></tr>
+                <tr><td>J08</td><td>HQ ETC review</td><td>HQ Administrator</td><td>Paid ETC application is reviewed, approved/rejected, and applicant status/email updates.</td></tr>
+                <tr><td>J09</td><td>Access control negative tests</td><td>All roles</td><td>Payment-only, read-only, cross-airport, and public guessing attempts are blocked.</td></tr>
+                <tr><td>J10</td><td>Reports and reconciliation</td><td>HQ / Manager / Auditor</td><td>Dashboards, exports, transactions, and reconciliation match expected scope.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="matrix">
+          <h2>Role-Based Matrix</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Role</th><th>Must be able to</th><th>Must not be able to</th></tr></thead>
+              <tbody>
+                <tr><td>System Administrator</td><td>Manage users, roles, reference data, workflow, devices, all reports.</td><td>Use demo bypasses in production without audit.</td></tr>
+                <tr><td>HQ Administrator</td><td>Review ETC, see national reports, revoke where authorized, inspect reconciliation.</td><td>Bypass payment rules without configured waiver/authorization.</td></tr>
+                <tr><td>Airport Manager</td><td>Manage airport scope, approve, revoke, manage devices, export airport reports.</td><td>Access unrelated airport data unless granted national authority.</td></tr>
+                <tr><td>Shift Supervisor</td><td>Review, approve, cancel, authorize reprint, approve waiver where configured.</td><td>Revoke permit if title does not allow revocation.</td></tr>
+                <tr><td>Visa Processing Officer</td><td>Create applications, issue after approval/payment, view own airport records.</td><td>Approve, revoke, or access another airport.</td></tr>
+                <tr><td>Payment Officer</td><td>View payment queue, capture receipt, confirm invoice payment.</td><td>Create applications, approve, issue permits, or access operational pages.</td></tr>
+                <tr><td>Compliance Auditor</td><td>Read audit, reconciliation, and reports.</td><td>Create, update, approve, revoke, or issue.</td></tr>
+                <tr><td>Executive Observer</td><td>View approved executive oversight screens.</td><td>Perform operational mutations.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="technical">
+          <h2>Technical Regression</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Area</th><th>Command or activity</th><th>Pass criteria</th></tr></thead>
+              <tbody>
+                <tr><td>Migrations</td><td><code>php artisan migrate --force</code></td><td>No failed migrations.</td></tr>
+                <tr><td>PHP tests</td><td><code>php artisan test</code></td><td>All tests pass, or documented skips are accepted.</td></tr>
+                <tr><td>Security tests</td><td><code>composer security:test</code></td><td>Authentication, receipt, OWASP, session, and payment tests pass.</td></tr>
+                <tr><td>OWASP readiness</td><td><code>composer security:owasp</code></td><td>Production-shaped environment passes all checks.</td></tr>
+                <tr><td>PHP audit</td><td><code>composer audit --locked</code></td><td>No production-blocking advisories.</td></tr>
+                <tr><td>Node audit</td><td><code>npm audit --audit-level=high</code></td><td>No high/critical advisories.</td></tr>
+                <tr><td>Frontend build</td><td><code>npm run build</code></td><td>Assets compile successfully.</td></tr>
+                <tr><td>Deploy cache</td><td><code>php artisan config:cache</code>, <code>route:cache</code>, <code>view:cache</code></td><td>All caches build cleanly.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="security">
+          <h2>Security And OWASP</h2>
+          <ul>
+            <li>Public registration is disabled.</li>
+            <li>Staff routes require auth, verified email, active user, and staff access middleware.</li>
+            <li>Role/title authorization blocks direct URL access, not only hidden buttons.</li>
+            <li>Airport-scoped users cannot access another airport's applications, invoices, permits, receipts, or reports.</li>
+            <li>Payment Officer is restricted to payment screens.</li>
+            <li>Receipt uploads and passport uploads are private and file-type restricted.</li>
+            <li>NRA receipt number reuse is blocked.</li>
+            <li>WanGov/GovPay webhook secret, payload size, replay/idempotency, and mismatch checks pass.</li>
+            <li>ETC status tokens and permit verification codes are rate-limited.</li>
+            <li>Security headers and CSP are present; runtime version disclosure is suppressed.</li>
+            <li>Production uses <code>APP_DEBUG=false</code>, secure encrypted cookies, HTTPS, and <code>expose_php=Off</code>.</li>
+          </ul>
+        </article>
+
+        <article id="smoke">
+          <h2>Smoke Test Sheet</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>URL</th><th>Expected</th><th>Actual</th><th>Pass/Fail</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>/</code></td><td>200</td><td></td><td></td><td>Home page.</td></tr>
+                <tr><td><code>/login</code></td><td>200</td><td></td><td></td><td>Staff sign in.</td></tr>
+                <tr><td><code>/up</code></td><td>200</td><td></td><td></td><td>Health check.</td></tr>
+                <tr><td><code>/emergency-travel-certificate/apply</code></td><td>200</td><td></td><td></td><td>ETC feature enabled.</td></tr>
+                <tr><td><code>/verify/not-real-code</code></td><td>404 or controlled invalid response</td><td></td><td></td><td>No personal data leak.</td></tr>
+                <tr><td>Security headers</td><td>CSP, X-Frame-Options, nosniff, Referrer-Policy</td><td></td><td></td><td>No <code>X-Powered-By</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="exit">
+          <h2>Exit Criteria</h2>
+          <ul>
+            <li>All P0 and P1 defects are closed and retested.</li>
+            <li>All P2 defects are fixed or accepted by the SLID owner.</li>
+            <li>Permit flow passes application, payment, approval, issuance, PDF, and QR verification.</li>
+            <li>ETC flow passes public application, WanGov/GovPay payment, HQ decision, and applicant status/email.</li>
+            <li>Role-based access passes for all staff titles.</li>
+            <li>NRA receipt duplicate prevention and payment reconciliation pass.</li>
+            <li>PDF samples are approved by SLID.</li>
+            <li>Email sender and templates are approved.</li>
+            <li>Backup/restore, monitoring, security, and data-protection sign-offs are complete.</li>
+          </ul>
+        </article>
+
+        <article id="signoff">
+          <h2>Go-Live Sign-Off</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Gate</th><th>Owner</th><th>Evidence</th><th>Status</th><th>Signature/date</th></tr></thead>
+              <tbody>
+                <tr><td>Functional UAT</td><td>SLID Operations</td><td>Completed journeys and closed defects.</td><td>Pending</td><td></td></tr>
+                <tr><td>Payment</td><td>SLID Finance / NRA / Customs owner</td><td>Receipt and WanGov/GovPay reconciliation evidence.</td><td>Pending</td><td></td></tr>
+                <tr><td>HQ workflow</td><td>SLID HQ</td><td>ETC and permit decision evidence.</td><td>Pending</td><td></td></tr>
+                <tr><td>Security</td><td>SLID IT/Security</td><td>OWASP check, dependency audits, penetration-test plan/report.</td><td>Pending</td><td></td></tr>
+                <tr><td>Data protection</td><td>SLID Legal/Data owner</td><td>Retention, privacy notice, access review.</td><td>Pending</td><td></td></tr>
+                <tr><td>Infrastructure</td><td>DevOps/Hosting owner</td><td>HTTPS, backups, restore test, queues, mail, monitoring.</td><td>Pending</td><td></td></tr>
+                <tr><td>Production approval</td><td>Project sponsor</td><td>Final go/no-go record.</td><td>Pending</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
