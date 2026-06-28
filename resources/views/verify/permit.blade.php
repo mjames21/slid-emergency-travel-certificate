@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Permit Verification</title>
+    <title>Emergency Travel Certificate Verification</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -13,7 +13,7 @@
         $statusClasses = match (strtolower($publicStatus)) {
             'valid' => 'border-green-200 bg-green-50 text-green-800',
             'expired' => 'border-amber-200 bg-amber-50 text-amber-800',
-            'revoked', 'replaced' => 'border-red-200 bg-red-50 text-red-800',
+            'revoked' => 'border-red-200 bg-red-50 text-red-800',
             default => 'border-blue-200 bg-blue-50 text-blue-800',
         };
     @endphp
@@ -24,7 +24,7 @@
                 <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Sierra Leone Immigration Department
                 </div>
-                <h1 class="mt-1 text-2xl font-bold text-gray-900">Permit Verification</h1>
+                <h1 class="mt-1 text-2xl font-bold text-gray-900">Emergency Travel Certificate Verification</h1>
                 <p class="mt-1 text-sm text-gray-600">
                     Official public verification result.
                 </p>
@@ -42,21 +42,10 @@
                     </div>
                 @endforeach
 
-                @if ($searchedPermit->id !== $permit->id)
-                    <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                        The verification code matches an older linked permit. The latest linked permit is shown below.
-                    </div>
-                @endif
-
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="rounded-xl border border-gray-200 p-4">
-                        <div class="text-sm text-gray-500">Searched Permit Number</div>
+                        <div class="text-sm text-gray-500">Certificate Number</div>
                         <div class="mt-1 text-lg font-semibold text-gray-900">{{ $searchedPermit->permit_no }}</div>
-                    </div>
-
-                    <div class="rounded-xl border border-gray-200 p-4">
-                        <div class="text-sm text-gray-500">Displayed Permit Number</div>
-                        <div class="mt-1 text-lg font-semibold text-gray-900">{{ $permit->permit_no }}</div>
                     </div>
 
                     <div class="rounded-xl border border-gray-200 p-4">
@@ -89,7 +78,7 @@
                 </div>
 
                 <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                    Only permits that verify on this official page should be accepted as valid immigration documents.
+                    Only certificates that verify on this official page should be accepted as valid immigration documents.
                 </div>
             </div>
         </div>

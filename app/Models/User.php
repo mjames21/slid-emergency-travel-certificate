@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,8 +13,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory;
     use HasApiTokens;
+    use HasFactory;
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
@@ -24,8 +23,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'primary_airport_id',
-        'primary_desk_id',
         'staff_number',
         'job_title',
         'phone',
@@ -54,33 +51,11 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
-    public function primaryAirport(): BelongsTo
-    {
-        return $this->belongsTo(Airport::class, 'primary_airport_id');
-    }
-
-    public function primaryDesk(): BelongsTo
-    {
-        return $this->belongsTo(Desk::class, 'primary_desk_id');
-    }
-
     public function staffTitles(): BelongsToMany
     {
         return $this->belongsToMany(StaffTitle::class, 'user_staff_titles')
             ->withPivot(['assigned_by_user_id', 'assigned_at', 'is_primary'])
             ->withTimestamps();
-    }
-
-    public function airports(): BelongsToMany
-    {
-        return $this->belongsToMany(Airport::class)
-            ->withPivot(['desk_id', 'is_primary', 'assigned_at', 'assigned_by_user_id'])
-            ->withTimestamps();
-    }
-
-    public function roleChanges(): HasMany
-    {
-        return $this->hasMany(UserRoleChange::class);
     }
 
     public function visaApplicationsCreated(): HasMany
@@ -103,19 +78,9 @@ class User extends Authenticatable
         return $this->hasMany(VisaApplication::class, 'reviewed_by');
     }
 
-    public function issuedReceipts(): HasMany
-    {
-        return $this->hasMany(Receipt::class, 'issued_by');
-    }
-
     public function issuedPermits(): HasMany
     {
         return $this->hasMany(Permit::class, 'issued_by');
-    }
-
-    public function checkedPermits(): HasMany
-    {
-        return $this->hasMany(Permit::class, 'checker_user_id');
     }
 
     public function permitPrintLogs(): HasMany

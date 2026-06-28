@@ -162,8 +162,8 @@ return [
     */
 
     'features' => [
-        // Staff users are provisioned through controlled admin/invitation workflows.
-        // Public self-registration is disabled for the national visa and border platform.
+        // Staff users are provisioned by the system administrator.
+        // Public self-registration is disabled for the ETC platform.
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

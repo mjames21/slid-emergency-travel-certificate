@@ -71,8 +71,6 @@
                 <tr>
                     <th class="py-3 pr-4">Name</th>
                     <th class="py-3 pr-4">Email</th>
-                    <th class="py-3 pr-4">Airport</th>
-                    <th class="py-3 pr-4">Desk</th>
                     <th class="py-3 pr-4">Titles</th>
                     <th class="py-3 pr-4">Active</th>
                 </tr>
@@ -82,14 +80,12 @@
                     <tr class="border-b">
                         <td class="py-3 pr-4">{{ $user->name }}</td>
                         <td class="py-3 pr-4">{{ $user->email }}</td>
-                        <td class="py-3 pr-4">{{ $user->primaryAirport?->code ?: '—' }}</td>
-                        <td class="py-3 pr-4">{{ $user->primaryDesk?->code ?: '—' }}</td>
                         <td class="py-3 pr-4">{{ $user->staffTitles->pluck('name')->join(', ') ?: '—' }}</td>
                         <td class="py-3 pr-4">{{ $user->active ? 'Yes' : 'No' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="py-4 text-gray-500">No users found.</td>
+                        <td colspan="4" class="py-4 text-gray-500">No users found.</td>
                     </tr>
                 @endforelse
             </tbody>

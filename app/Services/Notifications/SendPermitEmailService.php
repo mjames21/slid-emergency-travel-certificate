@@ -19,7 +19,7 @@ class SendPermitEmailService
             'visa_application_id' => $permit->visa_application_id,
             'channel' => 'email',
             'recipient' => $recipient,
-            'subject' => 'Sierra Leone Immigration Department Visa on Arrival Permit',
+            'subject' => 'Sierra Leone Immigration Department Emergency Travel Certificate',
             'status' => 'pending',
             'payload' => [
                 'permit_no' => $permit->permit_no,
@@ -46,7 +46,7 @@ class SendPermitEmailService
 
         Audit::log(
             action: 'notification.email_sent',
-            description: 'Permit email sent.',
+            description: 'Emergency Travel Certificate email sent.',
             auditable: $log,
             metadata: [
                 'permit_no' => $permit->permit_no,

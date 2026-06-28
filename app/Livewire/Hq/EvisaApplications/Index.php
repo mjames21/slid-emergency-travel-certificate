@@ -34,14 +34,14 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function approve(int $applicationId, ApproveOnlineEvisaApplicationService $service): void
+    public function issue(int $applicationId, ApproveOnlineEvisaApplicationService $service): void
     {
         $this->reset(['message', 'error']);
 
         $user = Auth::user();
 
         if (! ApproveOnlineEvisaApplicationService::canIssue($user)) {
-            $this->error = 'Only ETC issuers, executives, and system administrators can issue Emergency Travel Certificates.';
+            $this->error = 'Only an ETC Issuer can approve and issue Emergency Travel Certificates.';
 
             return;
         }
@@ -59,7 +59,7 @@ class Index extends Component
 
         try {
             $permit = $service->handle($application, $user);
-            $this->message = 'Approved and emailed Emergency Travel Certificate '.$permit->permit_no.' to the traveler.';
+            $this->message = 'Approved, issued, and emailed Emergency Travel Certificate '.$permit->permit_no.' to the traveler.';
         } catch (\Throwable $e) {
             report($e);
             $this->error = $e->getMessage();
@@ -69,7 +69,7 @@ class Index extends Component
     public function render(): View
     {
         $query = VisaApplication::query()
-            ->with(['passenger', 'airport', 'pointOfEntry', 'latestInvoice.payments', 'permit'])
+            ->with(['passenger', 'latestInvoice.payments', 'permit'])
             ->where('application_channel', VisaApplication::CHANNEL_ONLINE_EMERGENCY_TRAVEL_CERTIFICATE)
             ->latest('submitted_at')
             ->latest('id');

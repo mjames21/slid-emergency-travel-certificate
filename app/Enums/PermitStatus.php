@@ -10,5 +10,4 @@ enum PermitStatus: string
     case Expired = 'expired';
     case Cancelled = 'cancelled';
     case Revoked = 'revoked';
-    case Superseded = 'superseded';
 }

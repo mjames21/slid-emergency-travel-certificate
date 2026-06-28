@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Services\Audit\WriteAuditLogService;
+use App\Services\Evisa\ApproveOnlineEvisaApplicationService;
 use App\Services\Verification\VerifyPermitService;
-use App\Services\Workflow\WorkflowService;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Route;
@@ -77,8 +77,8 @@ class OwaspSecurityCheckCommand extends Command
             ),
             $this->check(
                 'A01 Broken Access Control',
-                'Sensitive certificate document route is airport scoped',
-                $this->routeHasMiddleware($documentRoute, 'airport.access'),
+                'Sensitive certificate document route is staff-title gated',
+                $this->routeHasMiddleware($documentRoute, 'staff.title'),
                 'documents.certificates.show'
             ),
             $this->check(
@@ -130,10 +130,17 @@ class OwaspSecurityCheckCommand extends Command
             ),
             $this->check(
                 'A06 Insecure Design',
-                'Permit workflow service enforces issuance rules',
-                class_exists(WorkflowService::class)
-                    && method_exists(WorkflowService::class, 'permitCanBeIssued'),
-                'WorkflowService::permitCanBeIssued'
+                'ETC issuance service enforces paid single-issuer workflow',
+                class_exists(ApproveOnlineEvisaApplicationService::class)
+                    && method_exists(ApproveOnlineEvisaApplicationService::class, 'canIssue'),
+                'ApproveOnlineEvisaApplicationService::canIssue'
+            ),
+            $this->check(
+                'A06 Insecure Design',
+                'Only the ETC Issuer role can approve and issue certificates',
+                class_exists(ApproveOnlineEvisaApplicationService::class)
+                    && ApproveOnlineEvisaApplicationService::issuerStaffTitleCodes() === ['etc_issuer'],
+                'issuerStaffTitleCodes=etc_issuer'
             ),
             $this->check(
                 'A07 Authentication Failures',
@@ -224,7 +231,7 @@ class OwaspSecurityCheckCommand extends Command
             ),
             $this->check(
                 'A09 Logging and Alerting Failures',
-                'Public permit verification attempts are recorded',
+                'Public certificate verification attempts are recorded',
                 class_exists(VerifyPermitService::class),
                 'VerifyPermitService'
             ),

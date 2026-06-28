@@ -7,7 +7,6 @@ use App\Enums\VisaApplicationStatus;
 use App\Models\Permit;
 use App\Models\User;
 use App\Models\VisaApplication;
-use App\Services\Workflow\WorkflowService;
 use App\Support\Audit;
 use App\Support\DocumentHashService;
 use App\Support\MrzGenerator;
@@ -20,43 +19,32 @@ use RuntimeException;
 class GeneratePermitService
 {
     public function __construct(
-        protected WorkflowService $workflowService,
         protected PermitNumberGenerator $permitNumberGenerator,
         protected VerificationCodeGenerator $verificationCodeGenerator,
         protected SecuritySealGenerator $securitySealGenerator,
         protected DocumentHashService $documentHashService,
         protected MrzGenerator $mrzGenerator
-    ) {
-    }
+    ) {}
 
-    public function handle(VisaApplication $application, User $issuer, ?User $checker = null): Permit
+    public function handle(VisaApplication $application, User $issuer): Permit
     {
-        if (! $this->workflowService->permitCanBeIssued($application)) {
-            throw new RuntimeException('Permit cannot be issued yet.');
-        }
-
-        if ($this->workflowService->requiresChecker($application) && ! $checker) {
-            throw new RuntimeException('Checker approval is required.');
-        }
-
         if ($application->permit) {
             return $application->permit;
         }
 
-        return DB::transaction(function () use ($application, $issuer, $checker) {
+        return DB::transaction(function () use ($application, $issuer) {
             $payment = $application->latestInvoice?->payments()->where('status', 'successful')->latest()->first();
-            $receipt = $payment?->receipt;
-            $waiver = $application->latestWaiverApproval;
+
+            if (! $payment) {
+                throw new RuntimeException('Emergency Travel Certificate cannot be issued before payment is confirmed.');
+            }
 
             $permit = Permit::query()->create([
-                'permit_no' => $this->permitNumberGenerator->generate($application->airport),
+                'permit_no' => $this->permitNumberGenerator->generate(),
                 'visa_application_id' => $application->id,
-                'payment_id' => $payment?->id,
-                'receipt_id' => $receipt?->id,
-                'waiver_approval_id' => $waiver?->id,
+                'payment_id' => $payment->id,
                 'issued_by' => $issuer->id,
-                'checker_user_id' => $checker?->id,
-                'permit_type' => 'visa_on_arrival',
+                'permit_type' => VisaApplication::TYPE_EMERGENCY_TRAVEL_CERTIFICATE,
                 'status' => PermitStatus::Issued,
                 'issued_at' => now(),
                 'valid_from' => $application->valid_from ?: now()->toDateString(),
@@ -96,26 +84,25 @@ class GeneratePermitService
 
             $application->update([
                 'status' => VisaApplicationStatus::PermitIssued,
-                'approved_by' => $checker?->id ?? $issuer->id,
+                'reviewed_by' => $issuer->id,
+                'approved_by' => $issuer->id,
+                'reviewed_at' => now(),
                 'approved_at' => now(),
                 'last_status_changed_at' => now(),
             ]);
 
             Audit::log(
                 action: 'permit.generated',
-                description: 'Permit generated.',
+                description: 'Emergency Travel Certificate generated.',
                 auditable: $permit,
                 metadata: [
                     'permit_no' => $permit->permit_no,
-                    'checker_user_id' => $checker?->id,
                 ]
             );
 
             return $permit->fresh([
                 'visaApplication.passenger',
                 'payment',
-                'receipt',
-                'waiverApproval',
             ]);
         });
     }

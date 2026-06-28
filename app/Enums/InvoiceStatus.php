@@ -11,5 +11,4 @@ enum InvoiceStatus: string
     case Failed = 'failed';
     case Expired = 'expired';
     case Cancelled = 'cancelled';
-    case Waived = 'waived';
 }

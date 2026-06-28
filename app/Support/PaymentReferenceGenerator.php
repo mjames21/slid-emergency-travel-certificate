@@ -2,17 +2,14 @@
 
 namespace App\Support;
 
-use App\Models\Airport;
-
 class PaymentReferenceGenerator
 {
     public function __construct(
-        protected DailyAirportSequenceGenerator $sequenceGenerator
-    ) {
-    }
+        protected DailySequenceGenerator $sequenceGenerator
+    ) {}
 
-    public function generate(Airport $airport, ?string $date = null): string
+    public function generate(?string $date = null): string
     {
-        return $this->sequenceGenerator->generate('SVA', $airport, $date);
+        return $this->sequenceGenerator->generate('ETC-PAY', $date);
     }
 }

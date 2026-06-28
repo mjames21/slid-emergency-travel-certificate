@@ -2,7 +2,7 @@
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
             <h1 class="text-2xl font-semibold text-gray-900">Emergency Travel Certificate Applications</h1>
-            <p class="mt-1 text-sm text-gray-600">HQ review queue for paid Emergency Travel Certificate applications.</p>
+            <p class="mt-1 text-sm text-gray-600">Paid applications are approved and issued in one action by the ETC Issuer.</p>
         </div>
     </div>
 
@@ -16,7 +16,7 @@
 
     <div class="grid gap-4 md:grid-cols-3">
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div class="text-sm text-gray-500">Paid, Pending HQ</div>
+            <div class="text-sm text-gray-500">Paid, Pending Issue</div>
             <div class="mt-1 text-2xl font-bold text-emerald-800">{{ $paidCount }}</div>
         </div>
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -41,7 +41,6 @@
                     <option value="">All</option>
                     <option value="awaiting_payment">Awaiting payment</option>
                     <option value="paid">Paid</option>
-                    <option value="approved">Approved</option>
                     <option value="permit_issued">Certificate issued</option>
                 </select>
             </div>
@@ -93,8 +92,8 @@
                             </td>
                             <td class="px-4 py-3">
                                 @if ($canIssueEtc && $application->status->value === 'paid' && ! $application->permit)
-                                    <button wire:click="approve({{ $application->id }})" type="button" class="rounded-md bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800">
-                                        Approve & Email Certificate
+                                    <button wire:click="issue({{ $application->id }})" type="button" class="rounded-md bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800">
+                                        Approve, Issue & Email
                                     </button>
                                 @else
                                     <span class="text-xs text-gray-400">No action</span>

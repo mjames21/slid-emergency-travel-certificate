@@ -3,11 +3,9 @@
 namespace Tests\Feature;
 
 use App\Contracts\MrzExtractor;
-use App\Models\Airport;
 use App\Models\Country;
 use App\Models\Nationality;
 use App\Models\Passenger;
-use App\Models\PurposeOfVisit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -45,15 +43,8 @@ class PublicEvisaApplicationTest extends TestCase
             'sort_order' => 1,
         ]);
 
-        PurposeOfVisit::query()->create([
-            'name' => 'Business',
-            'code' => 'BUSINESS',
-            'description' => 'Meetings, conferences, commercial activity',
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
-
         $response = $this->get('/emergency-travel-certificate/apply');
+        $content = $response->getContent();
 
         $response->assertOk()
             ->assertSee('Emergency Travel Certificate Application')
@@ -81,18 +72,20 @@ class PublicEvisaApplicationTest extends TestCase
             ->assertSee('Official Use Only')
             ->assertSee('Online Payment')
             ->assertSee('WanGov/GovPay fee confirmation')
-            ->assertDontSee('NRA Payment Details')
             ->assertSee('Applicant certification')
             ->assertSee('Save and continue')
             ->assertSee('Submit and continue to payment')
             ->assertSee('Sierra Leone - SLE')
-            ->assertSee('Business');
+            ->assertSee('Family emergency');
+
+        $this->assertMatchesRegularExpression('/id="guardian-section"[^>]*class="hidden /', $content);
     }
 
     #[Test]
     public function applicant_can_read_passport_mrz_before_completing_form(): void
     {
-        $this->app->bind(MrzExtractor::class, fn () => new class implements MrzExtractor {
+        $this->app->bind(MrzExtractor::class, fn () => new class implements MrzExtractor
+        {
             public function extract(string $absoluteImagePath): array
             {
                 return [
@@ -139,10 +132,6 @@ class PublicEvisaApplicationTest extends TestCase
         Storage::fake('local');
 
         User::factory()->create();
-        $airport = Airport::factory()->create([
-            'name' => 'Freetown International Airport',
-            'code' => 'FNA',
-        ]);
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -178,7 +167,6 @@ class PublicEvisaApplicationTest extends TestCase
             'marital_status' => 'married',
             'email' => 'traveler@example.test',
             'phone' => '+232700000000',
-            'airport_id' => $airport->id,
             'point_of_entry' => 'Emergency Travel Certificate Desk',
             'purpose_of_visit' => 'Family emergency',
             'period_of_stay_days' => 30,
@@ -189,6 +177,10 @@ class PublicEvisaApplicationTest extends TestCase
             'flight_details' => 'Freetown to Conakry',
             'destination_address' => 'Conakry',
             'remarks' => 'Lost passport replacement travel.',
+            'guardian_name' => 'Stale Guardian',
+            'guardian_relationship' => 'Parent',
+            'guardian_address' => 'Old Draft Address',
+            'guardian_phone' => '+232700000004',
             'applicant_certification' => '1',
         ]);
 
@@ -213,6 +205,10 @@ class PublicEvisaApplicationTest extends TestCase
         $this->assertSame('Guinea', $application->destination_country);
         $this->assertSame('Family emergency', $application->purpose_of_visit);
         $this->assertSame('Lost passport replacement travel.', $application->remarks);
+        $this->assertNull($application->guardian_name);
+        $this->assertNull($application->guardian_relationship);
+        $this->assertNull($application->guardian_address);
+        $this->assertNull($application->guardian_phone);
         $this->assertSame('ecowas', $application->travel_history['regional_category']);
         $this->assertSame('Guinea', $application->travel_history['destination_country']);
         $this->assertNull($application->accommodation_type);
@@ -227,10 +223,6 @@ class PublicEvisaApplicationTest extends TestCase
         Storage::fake('local');
 
         User::factory()->create();
-        $airport = Airport::factory()->create([
-            'name' => 'Freetown International Airport',
-            'code' => 'FNA',
-        ]);
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -261,7 +253,6 @@ class PublicEvisaApplicationTest extends TestCase
             'occupation' => 'Student',
             'email' => 'guardian@example.test',
             'phone' => '+232700000003',
-            'airport_id' => $airport->id,
             'point_of_entry' => 'Emergency Travel Certificate Desk',
             'purpose_of_visit' => 'Family emergency',
             'destination_country' => 'Guinea',

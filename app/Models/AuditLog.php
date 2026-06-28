@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class AuditLog extends Model
 {
     protected $fillable = [
-        'user_id','airport_id','desk_id','action','description',
-        'auditable_type','auditable_id','metadata','ip_address','user_agent',
+        'user_id', 'action', 'description',
+        'auditable_type', 'auditable_id', 'metadata', 'ip_address', 'user_agent',
     ];
 
     protected function casts(): array
@@ -18,8 +18,13 @@ class AuditLog extends Model
         return ['metadata' => 'array'];
     }
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function airport(): BelongsTo { return $this->belongsTo(Airport::class); }
-    public function desk(): BelongsTo { return $this->belongsTo(Desk::class); }
-    public function auditable(): MorphTo { return $this->morphTo(); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function auditable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 }

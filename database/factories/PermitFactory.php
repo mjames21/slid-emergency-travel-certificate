@@ -16,20 +16,16 @@ class PermitFactory extends Factory
     public function definition(): array
     {
         return [
-            'permit_no' => 'SLID-VOA-FNA-' . now()->format('Y') . '-' . $this->faker->unique()->numberBetween(100000, 999999),
+            'permit_no' => 'ETC-CERT-'.now()->format('Y').'-'.$this->faker->unique()->numberBetween(100000, 999999),
             'visa_application_id' => VisaApplication::factory(),
             'payment_id' => Payment::factory(),
-            'receipt_id' => null,
-            'waiver_approval_id' => null,
             'issued_by' => User::factory(),
-            'checker_user_id' => null,
-            'superseded_by_permit_id' => null,
-            'permit_type' => 'visa_on_arrival',
+            'permit_type' => VisaApplication::TYPE_EMERGENCY_TRAVEL_CERTIFICATE,
             'status' => PermitStatus::Issued,
             'issued_at' => now(),
             'valid_from' => now()->toDateString(),
             'valid_until' => now()->addMonth()->toDateString(),
-            'verification_code' => 'VRY-' . strtoupper(bin2hex(random_bytes(10))),
+            'verification_code' => 'VRY-'.strtoupper(bin2hex(random_bytes(10))),
             'security_seal' => hash('sha256', (string) fake()->uuid()),
             'seal_algorithm' => 'hmac-sha256',
             'seal_version' => 'v1',

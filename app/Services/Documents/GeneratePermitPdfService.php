@@ -1,4 +1,5 @@
 <?php
+
 // FILE: app/Services/Documents/GeneratePermitPdfService.php
 
 namespace App\Services\Documents;
@@ -13,8 +14,7 @@ class GeneratePermitPdfService
 {
     public function __construct(
         protected GenerateQrCodeService $generateQrCodeService
-    ) {
-    }
+    ) {}
 
     public function handle(
         Permit $permit,
@@ -25,16 +25,11 @@ class GeneratePermitPdfService
     ): string {
         $permit->loadMissing([
             'visaApplication.passenger',
-            'visaApplication.airport',
-            'visaApplication.desk',
             'payment',
-            'receipt',
-            'waiverApproval',
             'issuer',
-            'checker',
         ]);
 
-        $path = 'documents/permits/' . $permit->permit_no . '.pdf';
+        $path = 'documents/permits/'.$permit->permit_no.'.pdf';
 
         if (! $permit->qr_code_path || ! Storage::disk('local')->exists($permit->qr_code_path)) {
             $permit->update([
@@ -45,18 +40,13 @@ class GeneratePermitPdfService
         }
 
         $qrRaw = Storage::disk('local')->get($permit->qr_code_path);
-        $qrImageBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrRaw);
+        $qrImageBase64 = 'data:image/svg+xml;base64,'.base64_encode($qrRaw);
 
         $pdf = Pdf::loadView('pdf.permit', [
             'permit' => $permit->fresh([
                 'visaApplication.passenger',
-                'visaApplication.airport',
-                'visaApplication.desk',
                 'payment',
-                'receipt',
-                'waiverApproval',
                 'issuer',
-                'checker',
             ]),
             'verificationUrl' => route('verify.permit', $permit->verification_code),
             'qrImageBase64' => $qrImageBase64,
@@ -74,8 +64,6 @@ class GeneratePermitPdfService
         if ($printedBy) {
             $permit->printLogs()->create([
                 'printed_by' => $printedBy->id,
-                'airport_id' => $printedBy->primary_airport_id,
-                'desk_id' => $printedBy->primary_desk_id,
                 'terminal_name' => request()->header('X-Terminal-Name'),
                 'printer_name' => request()->header('X-Printer-Name'),
                 'is_reprint' => $isReprint,
@@ -87,11 +75,10 @@ class GeneratePermitPdfService
 
         Audit::log(
             action: $isReprint ? 'permit.reprinted' : 'permit.printed',
-            description: $isReprint ? 'Permit reprinted.' : 'Permit printed.',
+            description: $isReprint ? 'Emergency Travel Certificate reprinted.' : 'Emergency Travel Certificate printed.',
             auditable: $permit,
             metadata: [
                 'permit_no' => $permit->permit_no,
-                'visa_id' => $permit->visa_id,
                 'print_count' => $permit->fresh()->print_count,
                 'reason_code' => $reasonCode,
             ]

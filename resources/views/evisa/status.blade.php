@@ -45,7 +45,7 @@
 
             <div class="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                 <div class="font-bold">Required flow</div>
-                <div class="mt-1">Apply online, pay the ETC fee through WanGov/GovPay, then wait for HQ approval. NRA receipt upload is not used for ETC applications. If approved, the official Emergency Travel Certificate is emailed to you.</div>
+                <div class="mt-1">Apply online and pay the ETC fee through WanGov/GovPay. One ETC Issuer approves and issues the official Emergency Travel Certificate after payment is confirmed.</div>
             </div>
 
             <div class="mt-6 flex flex-wrap gap-3">
@@ -73,7 +73,7 @@
                     @endif
                 @elseif (! $application->permit)
                     <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
-                        Payment received. Pending HQ approval.
+                        Payment received. Pending ETC Issuer approval and issue.
                     </div>
                 @endif
 
@@ -83,7 +83,7 @@
             </div>
 
             <div class="mt-8 border-t border-gray-200 pt-5 text-sm leading-7 text-gray-600">
-                HQ reviews Emergency Travel Certificate applications after WanGov/GovPay payment is confirmed. If approved, the certificate is issued and sent to the applicant email. Airport officers can verify it and complete admissibility screening on arrival.
+                The ETC Issuer reviews paid Emergency Travel Certificate applications after WanGov/GovPay payment is confirmed. If approved, the certificate is issued and sent to the applicant email for verification.
             </div>
         </div>
     </main>

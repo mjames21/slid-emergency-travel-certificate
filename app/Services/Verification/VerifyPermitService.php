@@ -12,7 +12,7 @@ class VerifyPermitService
     public function handle(string $code, array $context = []): array
     {
         $permit = Permit::query()
-            ->with(['visaApplication.passenger', 'receipt', 'payment'])
+            ->with(['visaApplication.passenger', 'payment'])
             ->where('verification_code', $code)
             ->first();
 

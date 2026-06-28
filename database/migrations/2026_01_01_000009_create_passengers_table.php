@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('passengers', function (Blueprint $table) {
@@ -25,6 +26,12 @@ return new class extends Migration {
             $table->string('phone', 50)->nullable();
 
             $table->string('passport_biodata_image_path')->nullable();
+            $table->string('passport_mrz_image_path')->nullable();
+            $table->text('passport_mrz_raw')->nullable();
+            $table->json('passport_mrz_data')->nullable();
+            $table->decimal('passport_mrz_confidence', 5, 2)->nullable();
+            $table->timestamp('passport_mrz_extracted_at')->nullable();
+            $table->foreignId('passport_mrz_extracted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('passport_biodata_captured_at')->nullable();
             $table->foreignId('passport_biodata_captured_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('passport_biodata_capture_device')->nullable();

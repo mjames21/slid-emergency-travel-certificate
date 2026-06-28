@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\VisaApplicationStatus;
-use App\Models\Airport;
-use App\Models\Desk;
 use App\Models\Passenger;
 use App\Models\User;
 use App\Models\VisaApplication;
@@ -17,25 +15,22 @@ class VisaApplicationFactory extends Factory
     public function definition(): array
     {
         return [
-            'application_no' => 'VOA-FNA-' . now()->format('Ymd') . '-' . $this->faker->unique()->numberBetween(10000, 99999),
+            'application_no' => 'ETC-'.now()->format('Ymd').'-'.$this->faker->unique()->numberBetween(10000, 99999),
             'passenger_id' => Passenger::factory(),
-            'airport_id' => Airport::factory(),
-            'desk_id' => Desk::factory(),
             'created_by' => User::factory(),
             'submitted_by' => null,
             'approved_by' => null,
             'reviewed_by' => null,
-            'visa_type' => 'visa_on_arrival',
+            'visa_type' => VisaApplication::TYPE_EMERGENCY_TRAVEL_CERTIFICATE,
+            'application_channel' => VisaApplication::CHANNEL_ONLINE_EMERGENCY_TRAVEL_CERTIFICATE,
             'status' => $this->faker->randomElement([
-                VisaApplicationStatus::Submitted,
                 VisaApplicationStatus::AwaitingPayment,
                 VisaApplicationStatus::Paid,
-                VisaApplicationStatus::UnderReview,
                 VisaApplicationStatus::Approved,
                 VisaApplicationStatus::PermitIssued,
             ]),
-            'purpose_of_visit' => strtoupper($this->faker->randomElement(['VISIT', 'BUSINESS', 'CONFERENCE', 'TOURISM'])),
-            'point_of_entry' => 'FREETOWN INTERNATIONAL AIRPORT',
+            'purpose_of_visit' => strtoupper($this->faker->randomElement(['RETURN HOME', 'FAMILY EMERGENCY', 'LOST PASSPORT', 'OFFICIAL TRAVEL'])),
+            'point_of_entry' => 'EMERGENCY TRAVEL CERTIFICATE DESK',
             'period_of_stay_days' => $this->faker->numberBetween(7, 30),
             'period_of_stay_text' => 'ONE (1) MONTH',
             'arrival_date' => now()->toDateString(),
@@ -48,8 +43,6 @@ class VisaApplicationFactory extends Factory
             'host_address' => strtoupper($this->faker->address()),
             'host_phone' => $this->faker->phoneNumber(),
             'destination_address' => strtoupper($this->faker->address()),
-            'is_fee_waived' => false,
-            'requires_checker_approval' => false,
             'remarks' => $this->faker->sentence(),
             'submitted_at' => now(),
             'reviewed_at' => null,

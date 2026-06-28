@@ -31,9 +31,6 @@ Route::post('/emergency-travel-certificate/pay/{token}', [EvisaApplicationContro
     ->middleware('throttle:etc-status')
     ->name('etc.pay');
 
-Route::get('/evisa/apply', fn () => redirect()->route('etc.apply'));
-Route::get('/evisa/status/{token}', fn (string $token) => redirect()->route('etc.status', $token));
-
 Route::post('/webhooks/wangov', WangovPaymentUpdateWebhookController::class)
     ->middleware('throttle:wangov-webhook')
     ->name('webhooks.wangov');
@@ -49,12 +46,12 @@ Route::get('/verify/{code}', VerifyPermitController::class)
 Route::middleware(['auth', 'verified', 'active', 'staff.access', 'staff.mfa'])
     ->group(function () {
         Route::redirect('/dashboard', '/hq/emergency-travel-certificates')
-            ->middleware('staff.title:system_administrator,etc_issuer,hq_administrator,compliance_auditor,executive_observer')
+            ->middleware('staff.title:system_administrator,etc_issuer,executive_observer')
             ->name('dashboard');
 
         Route::prefix('hq')
             ->name('hq.')
-            ->middleware('staff.title:system_administrator,etc_issuer,hq_administrator,compliance_auditor,executive_observer')
+            ->middleware('staff.title:system_administrator,etc_issuer,executive_observer')
             ->group(function () {
                 Route::get('/emergency-travel-certificates', HqEvisaApplicationsIndex::class)
                     ->name('emergency-travel-certificates.index');
@@ -70,8 +67,7 @@ Route::middleware(['auth', 'verified', 'active', 'staff.access', 'staff.mfa'])
 
         Route::get('/documents/certificates/{permit}', [DocumentController::class, 'permit'])
             ->middleware([
-                'staff.title:system_administrator,etc_issuer,hq_administrator,compliance_auditor,executive_observer',
-                'airport.access:permit',
+                'staff.title:system_administrator,etc_issuer,executive_observer',
             ])
             ->name('documents.certificates.show');
     });

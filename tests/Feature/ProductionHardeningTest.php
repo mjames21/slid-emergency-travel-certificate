@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Airport;
 use App\Models\Country;
 use App\Models\Permit;
 use App\Models\PermitVerification;
@@ -71,10 +70,6 @@ class ProductionHardeningTest extends TestCase
         config(['features.emergency_travel_certificate' => true]);
 
         User::factory()->create();
-        $airport = Airport::factory()->create([
-            'name' => 'Freetown International Airport',
-            'code' => 'FNA',
-        ]);
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -105,7 +100,6 @@ class ProductionHardeningTest extends TestCase
             'occupation' => 'Consultant',
             'email' => 'traveler@example.test',
             'phone' => '+232700000000',
-            'airport_id' => $airport->id,
             'point_of_entry' => 'Emergency Travel Certificate Desk',
             'purpose_of_visit' => 'Family emergency',
             'destination_country' => 'Guinea',
@@ -174,7 +168,7 @@ class ProductionHardeningTest extends TestCase
 
         $this->withServerVariables([
             'REMOTE_ADDR' => '203.0.113.44',
-            'HTTP_USER_AGENT' => 'BorderDesk/1.0',
+            'HTTP_USER_AGENT' => 'CertificateVerifier/1.0',
         ])->get('/verify/SVV-TEST-VERIFICATION')
             ->assertOk();
 

@@ -15,12 +15,12 @@ class InvoiceFactory extends Factory
     public function definition(): array
     {
         return [
-            'invoice_no' => 'INV-FNA-' . now()->format('Ymd') . '-' . $this->faker->unique()->numberBetween(10000, 99999),
+            'invoice_no' => 'ETC-INV-'.now()->format('Ymd').'-'.$this->faker->unique()->numberBetween(10000, 99999),
             'visa_application_id' => VisaApplication::factory(),
             'created_by' => User::factory(),
             'amount' => 100.00,
             'currency' => 'USD',
-            'payment_reference' => 'WPG-' . strtoupper($this->faker->unique()->bothify('****************')),
+            'payment_reference' => 'ETC-PAY-'.now()->format('Ymd').'-'.$this->faker->unique()->numberBetween(1000, 9999),
             'gateway' => 'wangov',
             'status' => $this->faker->randomElement([
                 InvoiceStatus::Pending,

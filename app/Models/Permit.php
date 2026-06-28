@@ -14,14 +14,9 @@ class Permit extends Model
 
     protected $fillable = [
         'permit_no',
-        'visa_id',
         'visa_application_id',
         'payment_id',
-        'receipt_id',
-        'waiver_approval_id',
         'issued_by',
-        'checker_user_id',
-        'superseded_by_permit_id',
         'permit_type',
         'status',
         'issued_at',
@@ -45,9 +40,6 @@ class Permit extends Model
         'cancelled_at',
         'revoked_at',
         'revocation_reason',
-        'parent_permit_id',
-        'is_extension',
-        'permit_status',
     ];
 
     protected function casts(): array
@@ -63,7 +55,6 @@ class Permit extends Model
             'is_duplicate_print' => 'boolean',
             'cancelled_at' => 'datetime',
             'revoked_at' => 'datetime',
-            'is_extension' => 'boolean',
         ];
     }
 
@@ -77,29 +68,9 @@ class Permit extends Model
         return $this->belongsTo(Payment::class);
     }
 
-    public function receipt(): BelongsTo
-    {
-        return $this->belongsTo(Receipt::class);
-    }
-
-    public function waiverApproval(): BelongsTo
-    {
-        return $this->belongsTo(WaiverApproval::class);
-    }
-
     public function issuer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by');
-    }
-
-    public function checker(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'checker_user_id');
-    }
-
-    public function supersededBy(): BelongsTo
-    {
-        return $this->belongsTo(Permit::class, 'superseded_by_permit_id');
     }
 
     public function verifications(): HasMany
@@ -112,23 +83,8 @@ class Permit extends Model
         return $this->hasMany(PermitPrintLog::class);
     }
 
-    public function fraudFlags(): HasMany
-    {
-        return $this->hasMany(FraudFlag::class);
-    }
-
     public function notificationLogs(): HasMany
     {
         return $this->hasMany(NotificationLog::class);
-    }
-
-    public function admissibilityScreenings(): HasMany
-    {
-        return $this->hasMany(AdmissibilityScreening::class);
-    }
-
-    public function borderMovements(): HasMany
-    {
-        return $this->hasMany(BorderMovement::class);
     }
 }

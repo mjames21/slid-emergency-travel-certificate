@@ -1,4 +1,5 @@
 <?php
+
 // FILE: app/Models/Passenger.php
 
 namespace App\Models;
@@ -59,15 +60,5 @@ class Passenger extends Model
     public function visaApplications(): HasMany
     {
         return $this->hasMany(VisaApplication::class);
-    }
-
-    public function admissibilityScreenings(): HasMany
-    {
-        return $this->hasMany(AdmissibilityScreening::class);
-    }
-
-    public function borderMovements(): HasMany
-    {
-        return $this->hasMany(BorderMovement::class);
     }
 }

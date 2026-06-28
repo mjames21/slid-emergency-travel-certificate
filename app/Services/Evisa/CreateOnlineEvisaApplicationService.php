@@ -4,7 +4,6 @@ namespace App\Services\Evisa;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\VisaApplicationStatus;
-use App\Models\Airport;
 use App\Models\Invoice;
 use App\Models\Passenger;
 use App\Models\User;
@@ -22,14 +21,12 @@ class CreateOnlineEvisaApplicationService
         protected ApplicationNumberGenerator $applicationNumberGenerator,
         protected InvoiceNumberGenerator $invoiceNumberGenerator,
         protected PaymentReferenceGenerator $paymentReferenceGenerator
-    ) {
-    }
+    ) {}
 
     public function handle(array $data): VisaApplication
     {
         return DB::transaction(function () use ($data) {
-            $airport = Airport::query()->findOrFail($data['airport_id']);
-            $fullName = trim($data['surname'] . ' ' . $data['given_names']);
+            $fullName = trim($data['surname'].' '.$data['given_names']);
 
             $passenger = Passenger::query()->updateOrCreate(
                 [
@@ -62,11 +59,10 @@ class CreateOnlineEvisaApplicationService
             );
 
             $application = VisaApplication::query()->create([
-                'application_no' => $this->applicationNumberGenerator->generate($airport),
+                'application_no' => $this->applicationNumberGenerator->generate(),
                 'public_tracking_code' => $this->trackingCode(),
                 'public_access_token' => Str::random(48),
                 'passenger_id' => $passenger->id,
-                'airport_id' => $airport->id,
                 'created_by' => $data['created_by'] ?? User::query()->oldest('id')->value('id'),
                 'submitted_by' => null,
                 'visa_type' => VisaApplication::TYPE_EMERGENCY_TRAVEL_CERTIFICATE,
@@ -81,9 +77,8 @@ class CreateOnlineEvisaApplicationService
                 'status' => VisaApplicationStatus::AwaitingPayment,
                 'purpose_of_visit' => $data['purpose_of_visit'],
                 'point_of_entry' => $data['point_of_entry'],
-                'point_of_entry_id' => $data['point_of_entry_id'] ?? null,
                 'period_of_stay_days' => (int) $data['period_of_stay_days'],
-                'period_of_stay_text' => $data['period_of_stay_days'] . ' DAYS',
+                'period_of_stay_text' => $data['period_of_stay_days'].' DAYS',
                 'arrival_date' => $data['arrival_date'],
                 'valid_from' => $data['arrival_date'],
                 'valid_until' => Carbon::parse($data['arrival_date'])->copy()->addDays((int) $data['period_of_stay_days'])->toDateString(),
@@ -115,8 +110,6 @@ class CreateOnlineEvisaApplicationService
                 'travel_history' => $data['travel_history'] ?? null,
                 'immigration_history' => $data['immigration_history'] ?? null,
                 'security_declarations' => $data['security_declarations'] ?? null,
-                'is_fee_waived' => false,
-                'requires_checker_approval' => false,
                 'remarks' => ($data['remarks'] ?? null) ?: null,
                 'submitted_at' => now(),
                 'applicant_submitted_at' => now(),
@@ -126,12 +119,12 @@ class CreateOnlineEvisaApplicationService
             ]);
 
             Invoice::query()->create([
-                'invoice_no' => $this->invoiceNumberGenerator->generate($airport),
+                'invoice_no' => $this->invoiceNumberGenerator->generate(),
                 'visa_application_id' => $application->id,
                 'created_by' => null,
                 'amount' => $data['amount'] ?? 80.00,
                 'currency' => $data['currency'] ?? 'USD',
-                'payment_reference' => $this->paymentReferenceGenerator->generate($airport),
+                'payment_reference' => $this->paymentReferenceGenerator->generate(),
                 'gateway' => 'wangov',
                 'status' => InvoiceStatus::Pending,
                 'issued_at' => now(),
@@ -145,7 +138,7 @@ class CreateOnlineEvisaApplicationService
     protected function trackingCode(): string
     {
         do {
-            $code = 'ETC-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+            $code = 'ETC-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
         } while (VisaApplication::query()->where('public_tracking_code', $code)->exists());
 
         return $code;

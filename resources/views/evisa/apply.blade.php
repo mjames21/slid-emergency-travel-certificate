@@ -31,6 +31,13 @@
         ];
 
         $stepFiveFields = ['applicant_certification'];
+        $etcPurposeOptions = [
+            'Medical',
+            'Return home',
+            'Family emergency',
+            'Lost passport',
+            'Official travel',
+        ];
 
         $errorStep = 1;
 
@@ -44,8 +51,6 @@
             $errorStep = 5;
         }
 
-        $defaultAirport = $airports->first();
-        $defaultPointOfEntry = $pointsOfEntry->first();
     @endphp
 
     <main class="mx-auto max-w-6xl px-4 py-2 sm:px-6 lg:px-8">
@@ -108,18 +113,18 @@
                     <form id="etc-application-form" method="POST" action="{{ route('etc.store') }}" enctype="multipart/form-data" class="space-y-5">
                         @csrf
 
-                        <input type="hidden" name="airport_id" value="{{ old('airport_id', $defaultAirport?->id) }}">
-                        <input type="hidden" name="point_of_entry_id" value="{{ old('point_of_entry_id', $defaultPointOfEntry?->id) }}">
-                        <input type="hidden" name="point_of_entry" value="{{ old('point_of_entry', $defaultPointOfEntry?->name ?: 'Emergency Travel Certificate Desk') }}">
+                        <input type="hidden" name="point_of_entry" value="{{ old('point_of_entry', 'Emergency Travel Certificate Desk') }}">
                         <input type="hidden" name="period_of_stay_days" value="{{ old('period_of_stay_days', 30) }}">
                         <input type="hidden" name="arrival_date" value="{{ old('arrival_date', now()->toDateString()) }}">
 
                         @if (isset($errors) && $errors->any())
-                            <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                            <div data-validation-summary class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                                 <div class="font-bold">Please correct the highlighted fields.</div>
                                 <ul class="mt-2 list-disc space-y-1 pl-5">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
+                                    @foreach ($errors->getMessages() as $field => $messages)
+                                        @foreach ($messages as $error)
+                                            <li data-error-for="{{ $field }}">{{ $error }}</li>
+                                        @endforeach
                                     @endforeach
                                 </ul>
                             </div>
@@ -375,7 +380,7 @@
                                 </div>
                             </div>
 
-                            <div id="guardian-section" class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+                            <div id="guardian-section" class="{{ old('applicant_category', 'adult') === 'child' ? '' : 'hidden ' }}rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                                 <div class="flex items-start justify-between gap-4">
                                     <div>
                                         <h3 class="text-base font-bold text-gray-950">Parent / Guardian Details</h3>
@@ -387,31 +392,31 @@
                                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Name</label>
-                                        <input name="guardian_name" value="{{ old('guardian_name') }}" placeholder="Parent or guardian name" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <input data-guardian-field name="guardian_name" value="{{ old('guardian_name') }}" placeholder="Parent or guardian name" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_name') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Relationship to Applicant</label>
-                                        <input name="guardian_relationship" value="{{ old('guardian_relationship') }}" placeholder="Father, mother, guardian" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <input data-guardian-field name="guardian_relationship" value="{{ old('guardian_relationship') }}" placeholder="Father, mother, guardian" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_relationship') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div class="md:col-span-2">
                                         <label class="text-sm font-semibold text-gray-700">Address</label>
-                                        <textarea name="guardian_address" rows="2" placeholder="Guardian address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('guardian_address') }}</textarea>
+                                        <textarea data-guardian-field name="guardian_address" rows="2" placeholder="Guardian address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>{{ old('guardian_address') }}</textarea>
                                         @error('guardian_address') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Telephone</label>
-                                        <input name="guardian_phone" value="{{ old('guardian_phone') }}" placeholder="Guardian telephone" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <input data-guardian-field name="guardian_phone" value="{{ old('guardian_phone') }}" placeholder="Guardian telephone" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_phone') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Sex</label>
-                                        <select name="guardian_sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <select data-guardian-field name="guardian_sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                             <option value="">Select</option>
                                             <option value="M" @selected(old('guardian_sex') === 'M')>Male</option>
                                             <option value="F" @selected(old('guardian_sex') === 'F')>Female</option>
@@ -462,8 +467,8 @@
                                         <label class="text-sm font-semibold text-gray-700">Purpose of Traveling <span class="text-red-600">*</span></label>
                                         <input name="purpose_of_visit" value="{{ old('purpose_of_visit') }}" type="text" list="purpose-list" placeholder="Medical, return home, family emergency, lost passport, official travel" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         <datalist id="purpose-list">
-                                            @foreach ($purposesOfVisit as $purpose)
-                                                <option value="{{ $purpose->name }}"></option>
+                                            @foreach ($etcPurposeOptions as $purpose)
+                                                <option value="{{ $purpose }}"></option>
                                             @endforeach
                                         </datalist>
                                         @error('purpose_of_visit') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
@@ -502,19 +507,19 @@
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                                 <h3 class="text-base font-bold text-gray-950">Official use and online payment</h3>
                                 <p class="mt-2 text-sm leading-6 text-gray-700">
-                                    ETC applications use online WanGov/GovPay payment after submission. HQ approval and final issue actions are completed by authorized staff.
+                                    ETC applications use online WanGov/GovPay payment after submission. One authorized ETC Issuer approves and issues the certificate after payment is confirmed.
                                 </p>
                                 <div class="mt-4 grid gap-3 md:grid-cols-3">
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
                                         <div class="font-semibold text-gray-900">Official Use Only</div>
-                                        <div class="mt-1 text-gray-600">HQ approval record</div>
+                                        <div class="mt-1 text-gray-600">Issuer approval record</div>
                                     </div>
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
                                         <div class="font-semibold text-gray-900">Online Payment</div>
                                         <div class="mt-1 text-gray-600">WanGov/GovPay fee confirmation</div>
                                     </div>
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
-                                        <div class="font-semibold text-gray-900">Officer in Charge</div>
+                                        <div class="font-semibold text-gray-900">ETC Issuer</div>
                                         <div class="mt-1 text-gray-600">Final issue trail</div>
                                     </div>
                                 </div>
@@ -532,7 +537,7 @@
                             <div class="rounded-md border border-emerald-200 bg-emerald-50 p-4">
                                 <h3 class="text-base font-bold text-emerald-950">Payment step</h3>
                                 <p class="mt-2 text-sm leading-6 text-emerald-900">
-                                    After submission, the system creates a tracking code and opens the WanGov/GovPay fee payment page. HQ reviews the application after online payment is confirmed.
+                                    After submission, the system creates a tracking code and opens the WanGov/GovPay fee payment page. The ETC Issuer reviews, approves, and issues the certificate after online payment is confirmed.
                                 </p>
                             </div>
 
@@ -559,6 +564,10 @@
             const nationalityCodeInput = document.getElementById('nationality_code');
             const draftStatus = document.getElementById('draft-status');
             const clearDraftButton = document.getElementById('clear-draft-button');
+            const validationSummary = document.querySelector('[data-validation-summary]');
+            const applicantCategoryInputs = Array.from(form.querySelectorAll('[name="applicant_category"]'));
+            const guardianSection = document.getElementById('guardian-section');
+            const guardianFields = Array.from(guardianSection?.querySelectorAll('[data-guardian-field]') || []);
             const hasErrors = @json($errors->any());
             const errorStep = @json($errorStep);
             const draftKey = 'slid:etc:application:draft:v2';
@@ -573,6 +582,41 @@
                     item.className = active
                         ? 'border border-emerald-600 bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white'
                         : 'border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-600';
+                });
+            };
+
+            const updateValidationSummary = () => {
+                if (!validationSummary) return;
+
+                if (!validationSummary.querySelector('[data-error-for]')) {
+                    validationSummary.classList.add('hidden');
+                }
+            };
+
+            const clearErrorsForField = (field) => {
+                if (!field?.name) return;
+
+                document.querySelectorAll('[data-error-for]').forEach((error) => {
+                    if (error.dataset.errorFor === field.name) {
+                        error.remove();
+                    }
+                });
+
+                field.closest('div')?.querySelectorAll('.text-xs.text-red-600').forEach((error) => error.remove());
+                updateValidationSummary();
+            };
+
+            const isChildApplicant = () => form.querySelector('[name="applicant_category"]:checked')?.value === 'child';
+
+            const updateGuardianVisibility = () => {
+                const childApplicant = isChildApplicant();
+                guardianSection?.classList.toggle('hidden', !childApplicant);
+                guardianFields.forEach((field) => {
+                    field.disabled = !childApplicant;
+
+                    if (!childApplicant) {
+                        clearErrorsForField(field);
+                    }
                 });
             };
 
@@ -679,7 +723,17 @@
             nationalitySelect?.addEventListener('change', () => {
                 const option = nationalitySelect.options[nationalitySelect.selectedIndex];
                 if (nationalityCodeInput) nationalityCodeInput.value = option?.dataset?.code || '';
+                clearErrorsForField(nationalitySelect);
+                clearErrorsForField(nationalityCodeInput);
                 saveDraft();
+            });
+
+            applicantCategoryInputs.forEach((input) => {
+                input.addEventListener('change', () => {
+                    clearErrorsForField(input);
+                    updateGuardianVisibility();
+                    saveDraft();
+                });
             });
 
             document.querySelectorAll('[data-next-step]').forEach((button) => {
@@ -690,8 +744,14 @@
                 });
             });
 
-            form?.addEventListener('input', scheduleDraftSave);
-            form?.addEventListener('change', scheduleDraftSave);
+            form?.addEventListener('input', (event) => {
+                clearErrorsForField(event.target);
+                scheduleDraftSave();
+            });
+            form?.addEventListener('change', (event) => {
+                clearErrorsForField(event.target);
+                scheduleDraftSave();
+            });
             form?.addEventListener('submit', () => localStorage.removeItem(draftKey));
 
             clearDraftButton?.addEventListener('click', () => {
@@ -744,6 +804,7 @@
             });
 
             restoreDraft();
+            updateGuardianVisibility();
             showStep(hasErrors ? errorStep : 1);
         })();
     </script>

@@ -17,8 +17,6 @@ class Audit
 
         AuditLog::query()->create([
             'user_id' => $user?->id,
-            'airport_id' => $user?->primary_airport_id,
-            'desk_id' => $user?->primary_desk_id,
             'action' => $action,
             'description' => $description,
             'auditable_type' => $auditable?->getMorphClass(),

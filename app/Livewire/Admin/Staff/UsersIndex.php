@@ -77,7 +77,7 @@ class UsersIndex extends Component
     public function render(): View
     {
         return view('livewire.admin.staff.users-index', [
-            'users' => User::with(['primaryAirport', 'primaryDesk', 'staffTitles'])->latest()->get(),
+            'users' => User::with(['staffTitles'])->latest()->get(),
             'provisionableTitles' => StaffTitle::query()
                 ->whereIn('code', $this->provisionableTitleCodes())
                 ->where('active', true)

@@ -19,14 +19,14 @@ class ApproveOnlineEvisaApplicationService
         protected SendPermitEmailService $sendPermitEmailService
     ) {}
 
-    public function handle(VisaApplication $application, User $approver): Permit
+    public function handle(VisaApplication $application, User $issuer): Permit
     {
-        if (! self::canIssue($approver)) {
-            throw new RuntimeException('Only ETC issuers, executives, and system administrators can issue Emergency Travel Certificates.');
+        if (! self::canIssue($issuer)) {
+            throw new RuntimeException('Only an ETC Issuer can approve and issue Emergency Travel Certificates.');
         }
 
         if ($application->application_channel !== VisaApplication::CHANNEL_ONLINE_EMERGENCY_TRAVEL_CERTIFICATE) {
-            throw new RuntimeException('Only online Emergency Travel Certificate applications can be approved through this workflow.');
+            throw new RuntimeException('Only online Emergency Travel Certificate applications can be approved and issued through this workflow.');
         }
 
         $application->loadMissing(['latestInvoice.payments', 'passenger']);
@@ -36,20 +36,20 @@ class ApproveOnlineEvisaApplicationService
             ->exists() ?? false;
 
         if (! $hasSuccessfulPayment) {
-            throw new RuntimeException('Emergency Travel Certificate application must be paid before HQ approval.');
+            throw new RuntimeException('Emergency Travel Certificate application must be paid before approval and issue.');
         }
 
-        return DB::transaction(function () use ($application, $approver) {
+        return DB::transaction(function () use ($application, $issuer) {
             $application->update([
                 'status' => VisaApplicationStatus::Approved,
-                'reviewed_by' => $approver->id,
-                'approved_by' => $approver->id,
+                'reviewed_by' => $issuer->id,
+                'approved_by' => $issuer->id,
                 'reviewed_at' => now(),
                 'approved_at' => now(),
                 'last_status_changed_at' => now(),
             ]);
 
-            $permit = $this->generatePermitService->handle($application->fresh(['latestInvoice.payments', 'latestWaiverApproval']), $approver);
+            $permit = $this->generatePermitService->handle($application->fresh(['latestInvoice.payments']), $issuer);
 
             $this->sendPermitEmailService->handle($permit->fresh(['visaApplication.passenger']));
 
@@ -66,8 +66,6 @@ class ApproveOnlineEvisaApplicationService
     {
         return [
             StaffTitleCode::EtcIssuer->value,
-            StaffTitleCode::ExecutiveObserver->value,
-            StaffTitleCode::SystemAdministrator->value,
         ];
     }
 }

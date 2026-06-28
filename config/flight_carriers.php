@@ -1,6 +1,6 @@
 <?php
 
-// Source: Freetown International Airport weekly flight schedule, updated 07.10.2025.
+// Source: ETC carrier options for Sierra Leone outbound emergency travel.
 // Keep this as an operational list: schedules change, so update here when FNA publishes a new program.
 return [
     [

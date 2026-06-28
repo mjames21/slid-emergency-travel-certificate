@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Permit {{ $permit->permit_no }}</title>
+    <title>Emergency Travel Certificate {{ $permit->permit_no }}</title>
     <style>
         @page {
             margin: 8mm;
@@ -216,10 +216,39 @@
             margin-top: 2px;
         }
 
-        .security {
+        .security-features {
+            width: 100%;
             margin-top: 6px;
+            border: 1px solid #555;
+            border-collapse: collapse;
             font-size: 7px;
             line-height: 1.2;
+        }
+
+        .security-features th {
+            background: #333;
+            color: #fff;
+            font-size: 8px;
+            letter-spacing: 0.4px;
+            padding: 4px 5px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        .security-features td {
+            border-top: 1px solid #bbb;
+            padding: 4px 5px;
+            vertical-align: top;
+        }
+
+        .security-label {
+            width: 28%;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .security-value {
+            width: 72%;
         }
 
         .mrz {
@@ -248,9 +277,13 @@
     $attentionLine2 = SystemSetting::getValue('permit_attention_line_2', 'ONS - STATE HOUSE');
     $officialAddress = SystemSetting::getValue('permit_official_address', '14 GLOUSCESTER STREET, FREETOWN, SIERRA LEONE');
     $officialPhone = SystemSetting::getValue('permit_official_phone', 'TEL: (+232) 22 224446 / 22 224447');
+    $issuerName = $permit->issuer?->name ?: 'ETC ISSUER';
+    $issuerTitle = $permit->issuer?->job_title ?: 'ETC ISSUER';
+    $paymentReference = $permit->payment?->gateway_transaction_id
+        ?: ($permit->payment?->gateway_reference ?: $permit->visaApplication?->latestInvoice?->payment_reference);
 
     $watermarkMain = 'SIERRA LEONE IMMIGRATION';
-    $watermarkSub = 'OFFICIAL PERMIT';
+    $watermarkSub = 'OFFICIAL ETC';
 
     if ($permit->is_duplicate_print) {
         $watermarkSub = 'OFFICIAL REPRINT';
@@ -268,7 +301,7 @@
 <div class="watermark">
     {{ $watermarkMain }}<br>
     {{ $watermarkSub }}<br>
-    {{ $permit->visa_id ?: $permit->permit_no }}
+    {{ $permit->permit_no }}
 </div>
 
 <div class="page">
@@ -287,8 +320,8 @@
     <table class="top-meta">
         <tr>
             <td class="left">
-                <strong>VISA ID</strong><br>
-                {{ $permit->visa_id ?: $permit->permit_no }}
+                <strong>ETC NO.</strong><br>
+                {{ $permit->permit_no }}
             </td>
             <td class="middle"></td>
             <td class="right">
@@ -300,9 +333,9 @@
 
     <div class="rule"></div>
 
-    <div class="permit-title">PERMISSION TO ENTER SIERRA LEONE</div>
+    <div class="permit-title">EMERGENCY TRAVEL CERTIFICATE</div>
     <div class="permit-subtitle">
-        PERMISSION IS HEREBY GRANTED TO THE FOLLOWING PERSON / PERSONS TO ENTER SIERRA LEONE
+        THIS OFFICIAL CERTIFICATE IS ISSUED TO THE FOLLOWING APPLICANT
     </div>
 
     <div class="rule"></div>
@@ -370,20 +403,14 @@
         <tr>
             <td class="label-col">FEES PAID</td>
             <td class="value-col" colspan="2">
-                @if ($permit->payment_id)
-                    {{ number_format((float) $permit->payment->amount_paid, 2) }} {{ strtoupper($permit->payment->currency) }}
-                @elseif ($permit->waiver_approval_id)
-                    GRATIS
-                @else
-                    NOT AVAILABLE
-                @endif
+                {{ $permit->payment ? number_format((float) $permit->payment->amount_paid, 2).' '.strtoupper($permit->payment->currency) : 'NOT AVAILABLE' }}
             </td>
         </tr>
     </table>
 
     <div class="instruction-band">
         SPECIAL INSTRUCTION FROM THE CHIEF IMMIGRATION OFFICER<br>
-        THIS PERMIT IS ONLY VALID WITH RECEIPT OF PAYMENT ATTACHED
+        THIS CERTIFICATE IS ONLY VALID AFTER WANGOV/GOVPAY PAYMENT CONFIRMATION
     </div>
 
     <div class="verify-note">
@@ -407,18 +434,41 @@
         </tr>
     </table>
 
-    <div class="security">
-        <strong>Security Seal Ref:</strong> {{ PrintableSecurityValue::short($permit->security_seal) }}<br>
-        <strong>Document Hash Ref:</strong> {{ PrintableSecurityValue::short($permit->document_hash) }}<br>
-        <strong>Payment Basis:</strong>
-        @if ($permit->payment_id)
-            VERIFIED PAYMENT / RECEIPT {{ $permit->receipt?->receipt_no ?: 'PENDING' }}
-        @elseif ($permit->waiver_approval_id)
-            APPROVED WAIVER
-        @else
-            UNKNOWN
-        @endif
-    </div>
+    <table class="security-features">
+        <tr>
+            <th colspan="2">Security Features</th>
+        </tr>
+        <tr>
+            <td class="security-label">Security Seal Ref</td>
+            <td class="security-value">{{ PrintableSecurityValue::short($permit->security_seal) }}</td>
+        </tr>
+        <tr>
+            <td class="security-label">Document Hash Ref</td>
+            <td class="security-value">{{ PrintableSecurityValue::short($permit->document_hash) }}</td>
+        </tr>
+        <tr>
+            <td class="security-label">QR Verification</td>
+            <td class="security-value">{{ $permit->verification_code }}</td>
+        </tr>
+        <tr>
+            <td class="security-label">Payment Basis</td>
+            <td class="security-value">
+                @if ($permit->payment_id)
+                    VERIFIED WANGOV/GOVPAY PAYMENT{{ $paymentReference ? ' / REF '.$paymentReference : '' }}
+                @else
+                    UNKNOWN
+                @endif
+            </td>
+        </tr>
+        <tr>
+            <td class="security-label">Approval and Issue Officer</td>
+            <td class="security-value">{{ strtoupper($issuerName) }} / {{ strtoupper($issuerTitle) }}</td>
+        </tr>
+        <tr>
+            <td class="security-label">Issue Timestamp</td>
+            <td class="security-value">{{ optional($permit->issued_at)->format('Y-m-d H:i:s') }}</td>
+        </tr>
+    </table>
 
     <div class="mrz">
         {{ $permit->mrz_line_1 }}<br>

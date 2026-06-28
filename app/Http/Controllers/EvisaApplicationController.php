@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Airport;
 use App\Models\Country;
 use App\Models\Nationality;
-use App\Models\PointOfEntry;
-use App\Models\PurposeOfVisit;
 use App\Models\VisaApplication;
 use App\Services\Evisa\CreateOnlineEvisaApplicationService;
 use App\Services\Evisa\InitiateOnlineEvisaPaymentService;
@@ -26,19 +23,12 @@ class EvisaApplicationController extends Controller
     public function create(): View
     {
         return view('evisa.apply', [
-            'airports' => Airport::query()->orderBy('name')->get(),
             'countries' => Country::query()
                 ->where('active', true)
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(),
             'nationalities' => Nationality::query()
-                ->active()
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(),
-            'pointsOfEntry' => PointOfEntry::query()->orderBy('name')->get(),
-            'purposesOfVisit' => PurposeOfVisit::query()
                 ->active()
                 ->orderBy('sort_order')
                 ->orderBy('name')
@@ -87,8 +77,6 @@ class EvisaApplicationController extends Controller
             'marital_status' => ['nullable', Rule::in(['single', 'married', 'divorced', 'widowed', 'separated', 'other'])],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:50'],
-            'airport_id' => ['nullable', 'integer', 'exists:airports,id'],
-            'point_of_entry_id' => ['nullable', 'integer', 'exists:points_of_entry,id'],
             'point_of_entry' => ['nullable', 'string', 'max:255'],
             'purpose_of_visit' => ['required', 'string', 'max:255'],
             'period_of_stay_days' => ['nullable', 'integer', 'min:1', 'max:90'],
@@ -113,11 +101,11 @@ class EvisaApplicationController extends Controller
             'emergency_contact_relationship' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:50'],
             'emergency_contact_email' => ['nullable', 'email', 'max:255'],
-            'guardian_name' => ['nullable', 'required_if:applicant_category,child', 'string', 'max:255'],
-            'guardian_relationship' => ['nullable', 'required_if:applicant_category,child', 'string', 'max:255'],
-            'guardian_address' => ['nullable', 'required_if:applicant_category,child', 'string', 'max:1000'],
-            'guardian_phone' => ['nullable', 'required_if:applicant_category,child', 'string', 'max:50'],
-            'guardian_sex' => ['nullable', 'string', 'max:20'],
+            'guardian_name' => ['exclude_unless:applicant_category,child', 'required', 'string', 'max:255'],
+            'guardian_relationship' => ['exclude_unless:applicant_category,child', 'required', 'string', 'max:255'],
+            'guardian_address' => ['exclude_unless:applicant_category,child', 'required', 'string', 'max:1000'],
+            'guardian_phone' => ['exclude_unless:applicant_category,child', 'required', 'string', 'max:50'],
+            'guardian_sex' => ['exclude_unless:applicant_category,child', 'nullable', Rule::in(['M', 'F'])],
             'travel_history_countries' => ['nullable', 'string', 'max:1000'],
             'previous_sierra_leone_visit' => ['nullable', Rule::in(['yes', 'no'])],
             'previous_sierra_leone_visit_details' => ['nullable', 'string', 'max:1000'],
@@ -160,7 +148,6 @@ class EvisaApplicationController extends Controller
             ]);
         }
 
-        $validated['airport_id'] = $validated['airport_id'] ?? Airport::query()->orderBy('id')->value('id');
         $validated['period_of_stay_days'] = (int) ($validated['period_of_stay_days'] ?? 30);
         $validated['arrival_date'] = $validated['arrival_date'] ?? today()->toDateString();
         $validated['point_of_entry'] = ($validated['point_of_entry'] ?? null) ?: 'Emergency Travel Certificate Desk';
@@ -180,12 +167,6 @@ class EvisaApplicationController extends Controller
                     $detailsField => 'Provide details for any question answered yes.',
                 ]);
             }
-        }
-
-        if (! empty($validated['point_of_entry_id'])) {
-            $validated['point_of_entry'] = PointOfEntry::query()
-                ->whereKey($validated['point_of_entry_id'])
-                ->value('name') ?: $validated['point_of_entry'];
         }
 
         $validated['passport_biodata_image_path'] = $request
