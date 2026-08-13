@@ -38,11 +38,11 @@ class AddSecurityHeaders
         );
 
         if (config('security.headers.content_security_policy', true)) {
-            $headers->set('Content-Security-Policy', $this->contentSecurityPolicy(), false);
+            $headers->set('Content-Security-Policy', $this->contentSecurityPolicy($request), false);
         }
 
         if ($request->isSecure() && config('security.headers.hsts', false)) {
-            $value = 'max-age=' . (int) config('security.headers.hsts_max_age', 31536000) . '; includeSubDomains';
+            $value = 'max-age='.(int) config('security.headers.hsts_max_age', 31536000).'; includeSubDomains';
 
             if (config('security.headers.hsts_preload', false)) {
                 $value .= '; preload';
@@ -73,18 +73,31 @@ class AddSecurityHeaders
             || $request->routeIs('dashboard')
             || $request->routeIs('documents.*')
             || $request->routeIs('etc.status')
+            || $request->routeIs('digital.certificates.show')
             || $request->routeIs('verify.permit');
     }
 
-    private function contentSecurityPolicy(): string
+    private function contentSecurityPolicy(Request $request): string
     {
+        $scriptSources = [
+            "'self'",
+            "'unsafe-inline'",
+            'https://cdn.wan.gov.sl',
+            'https://*.wan.gov.sl',
+            'https://*.govpay.sl',
+        ];
+
+        if ($this->requiresLivewireRuntime($request)) {
+            $scriptSources[] = "'unsafe-eval'";
+        }
+
         $directives = [
             "default-src 'self'",
             "base-uri 'self'",
             "object-src 'none'",
             "frame-ancestors 'self'",
             "form-action 'self'",
-            "script-src 'self' 'unsafe-inline' https://cdn.wan.gov.sl https://*.wan.gov.sl https://*.govpay.sl",
+            'script-src '.implode(' ', $scriptSources),
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob:",
             "font-src 'self' data:",
@@ -100,5 +113,13 @@ class AddSecurityHeaders
         }
 
         return implode('; ', $directives);
+    }
+
+    private function requiresLivewireRuntime(Request $request): bool
+    {
+        return $request->is('livewire/*')
+            || $request->routeIs('admin.*')
+            || $request->routeIs('hq.*')
+            || $request->routeIs('profile.*');
     }
 }

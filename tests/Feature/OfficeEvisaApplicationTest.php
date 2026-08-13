@@ -6,6 +6,7 @@ use App\Contracts\MrzExtractor;
 use App\Models\Country;
 use App\Models\Nationality;
 use App\Models\Passenger;
+use App\Models\StaffTitle;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class PublicEvisaApplicationTest extends TestCase
+class OfficeEvisaApplicationTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,8 +26,17 @@ class PublicEvisaApplicationTest extends TestCase
     }
 
     #[Test]
-    public function apply_page_explains_passport_upload_and_manual_editing(): void
+    public function public_user_cannot_open_office_entry_page(): void
     {
+        $this->get('/emergency-travel-certificate/apply')
+            ->assertRedirect('/login');
+    }
+
+    #[Test]
+    public function office_entry_page_explains_passport_upload_and_manual_editing(): void
+    {
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         Nationality::query()->create([
             'name' => 'Sierra Leone',
             'code' => 'SLE',
@@ -47,8 +57,8 @@ class PublicEvisaApplicationTest extends TestCase
         $content = $response->getContent();
 
         $response->assertOk()
-            ->assertSee('Emergency Travel Certificate Application')
-            ->assertSee('Application Type and Evidence')
+            ->assertSee('Emergency Travel Certificate Office Entry')
+            ->assertSee('Traveler Type and Evidence')
             ->assertSee('Adult')
             ->assertSee('Child')
             ->assertSee('ECOWAS')
@@ -57,33 +67,41 @@ class PublicEvisaApplicationTest extends TestCase
             ->assertSee('Read passport and continue')
             ->assertSee('Image unclear? Type MRZ lines instead')
             ->assertSee('Save and continue manually')
-            ->assertSee('No account required')
-            ->assertSee('Application sections')
-            ->assertSee('Applicant Photo')
+            ->assertSee('Staff login required')
+            ->assertSee('Entry sections')
+            ->assertSee('Traveler Photo')
             ->assertSee('Personal Details')
             ->assertSee('Passport / NIN No.')
             ->assertSee('Place of Birth')
             ->assertSee('Marital Status')
             ->assertSee('Address, Contact, and Guardian')
             ->assertSee('Parent / Guardian Details')
-            ->assertSee('Destination and Purpose of Traveling')
+            ->assertSee('Destination and Purpose of Travel')
             ->assertSee('Purpose of Traveling')
-            ->assertSee('Official use and online payment')
+            ->assertSee('Carrier / Transport, if known')
+            ->assertSee('Reference, if known')
+            ->assertSee('Route Details')
+            ->assertSee('Images over 2 MB are compressed before upload.')
+            ->assertSee('data-compress-image', false)
+            ->assertSee('Official use and payment')
             ->assertSee('Official Use Only')
-            ->assertSee('Online Payment')
+            ->assertSee('Payment')
             ->assertSee('WanGov/GovPay fee confirmation')
-            ->assertSee('Applicant certification')
+            ->assertSee('Officer certification')
             ->assertSee('Save and continue')
-            ->assertSee('Submit and continue to payment')
+            ->assertSee('Submit office entry and continue to payment')
             ->assertSee('Sierra Leone - SLE')
             ->assertSee('Family emergency');
 
+        $this->assertStringNotContainsString('Flight Number, if known', $content);
         $this->assertMatchesRegularExpression('/id="guardian-section"[^>]*class="hidden /', $content);
     }
 
     #[Test]
-    public function applicant_can_read_passport_mrz_before_completing_form(): void
+    public function officer_can_read_passport_mrz_before_completing_form(): void
     {
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         $this->app->bind(MrzExtractor::class, fn () => new class implements MrzExtractor
         {
             public function extract(string $absoluteImagePath): array
@@ -111,8 +129,10 @@ class PublicEvisaApplicationTest extends TestCase
     }
 
     #[Test]
-    public function applicant_can_read_typed_mrz_lines_without_image_ocr(): void
+    public function officer_can_read_typed_mrz_lines_without_image_ocr(): void
     {
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         $response = $this->postJson('/emergency-travel-certificate/read-passport', [
             'mrz_line_1' => 'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<',
             'mrz_line_2' => 'L898902C36UTO7408122F1204159ZE184226B<<<<<10',
@@ -127,11 +147,12 @@ class PublicEvisaApplicationTest extends TestCase
     }
 
     #[Test]
-    public function applicant_can_apply_with_a_passport_biodata_upload(): void
+    public function officer_can_submit_office_entry_with_a_passport_biodata_upload(): void
     {
         Storage::fake('local');
 
-        User::factory()->create();
+        $issuer = $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -172,9 +193,9 @@ class PublicEvisaApplicationTest extends TestCase
             'period_of_stay_days' => 30,
             'arrival_date' => now()->addWeek()->toDateString(),
             'destination_country' => 'Guinea',
-            'flight_carrier' => 'Kenya Airways',
-            'flight_number' => 'KQ510',
-            'flight_details' => 'Freetown to Conakry',
+            'flight_carrier' => 'Private vehicle',
+            'flight_number' => 'ABJ-123',
+            'flight_details' => 'Freetown to Conakry by road via Gbalamuya',
             'destination_address' => 'Conakry',
             'remarks' => 'Lost passport replacement travel.',
             'guardian_name' => 'Stale Guardian',
@@ -190,11 +211,14 @@ class PublicEvisaApplicationTest extends TestCase
         $passenger = Passenger::query()->where('passport_number', 'SLR092377')->firstOrFail();
 
         $this->assertNotNull($passenger->passport_biodata_image_path);
-        $this->assertSame('online-applicant-upload', $passenger->passport_biodata_capture_device);
+        $this->assertSame('office-assisted-capture', $passenger->passport_biodata_capture_device);
         Storage::disk('local')->assertExists($passenger->passport_biodata_image_path);
 
         $application = $passenger->visaApplications()->firstOrFail();
 
+        $this->assertSame($issuer->id, $application->created_by);
+        $this->assertSame($issuer->id, $application->submitted_by);
+        $this->assertSame($issuer->id, $application->latestInvoice->created_by);
         $this->assertSame('adult', $application->applicant_category);
         $this->assertSame('ecowas', $application->regional_category);
         $this->assertSame('passport', $application->identity_document_type);
@@ -222,7 +246,8 @@ class PublicEvisaApplicationTest extends TestCase
     {
         Storage::fake('local');
 
-        User::factory()->create();
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -265,5 +290,28 @@ class PublicEvisaApplicationTest extends TestCase
             'guardian_address',
             'guardian_phone',
         ]);
+    }
+
+    private function actingAsStaffUserWithTitle(string $code, string $name): User
+    {
+        $title = StaffTitle::query()->firstOrCreate(
+            ['code' => $code],
+            [
+                'name' => $name,
+                'description' => "{$name} test role",
+                'active' => true,
+            ]
+        );
+
+        $user = User::factory()->create(['active' => true]);
+
+        $user->staffTitles()->attach($title->id, [
+            'assigned_at' => now(),
+            'is_primary' => true,
+        ]);
+
+        $this->actingAs($user);
+
+        return $user->fresh(['staffTitles']);
     }
 }

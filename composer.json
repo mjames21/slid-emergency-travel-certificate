@@ -60,7 +60,7 @@
             "@php artisan security:owasp-check --production"
         ],
         "security:test": [
-            "@php artisan test tests/Feature/AuthenticationTest.php tests/Feature/ProductionHardeningTest.php tests/Feature/SessionIntegrityTest.php tests/Feature/PublicEvisaApplicationTest.php tests/Feature/OwaspSecurityCheckCommandTest.php tests/Unit/TesseractMrzExtractorSecurityTest.php tests/Unit/OnlineEvisaLifecycleTest.php"
+            "@php artisan test tests/Feature/AuthenticationTest.php tests/Feature/ProductionHardeningTest.php tests/Feature/SessionIntegrityTest.php tests/Feature/OfficeEvisaApplicationTest.php tests/Feature/ReceiptCertificateGenerationTest.php tests/Feature/DigitalEtcCertificateTest.php tests/Feature/PwaAssetsTest.php tests/Feature/OwaspSecurityCheckCommandTest.php tests/Unit/TesseractMrzExtractorSecurityTest.php tests/Unit/OnlineEvisaLifecycleTest.php"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

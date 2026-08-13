@@ -9,6 +9,7 @@ use App\Models\Permit;
 use App\Models\StaffTitle;
 use App\Models\User;
 use App\Models\VisaApplication;
+use App\Services\Documents\GenerateQrCodeService;
 use App\Services\Evisa\ApproveOnlineEvisaApplicationService;
 use App\Services\Evisa\CreateOnlineEvisaApplicationService;
 use App\Services\Evisa\InitiateOnlineEvisaPaymentService;
@@ -18,6 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Tests\TestCase;
@@ -81,6 +83,22 @@ class OnlineEvisaLifecycleTest extends TestCase
         $this->assertSame($hqOfficer->id, $issuedApplication->reviewed_by);
         $this->assertSame($hqOfficer->id, $issuedApplication->approved_by);
         $this->assertTrue(Gate::forUser($hqOfficer)->allows('print', $permit));
+        $this->assertNotEmpty($permit->mrz_line_1);
+        $this->assertNotEmpty($permit->mrz_line_2);
+
+        $qrService = app(GenerateQrCodeService::class);
+
+        $this->assertSame(
+            route('verify.permit', $permit->verification_code),
+            $qrService->verificationPayload($permit)
+        );
+
+        Storage::fake('local');
+
+        $qrPath = $qrService->handle($permit);
+
+        $this->assertSame('qrcodes/'.$permit->permit_no.'.svg', $qrPath);
+        Storage::disk('local')->assertExists($qrPath);
 
         $certificateHtml = view('pdf.permit', [
             'permit' => $permit->fresh(['visaApplication.passenger', 'visaApplication.latestInvoice', 'payment', 'issuer']),
@@ -89,6 +107,7 @@ class OnlineEvisaLifecycleTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString('Security Features', $certificateHtml);
+        $this->assertStringContainsString('QR Verification', $certificateHtml);
         $this->assertStringContainsString('Approval and Issue Officer', $certificateHtml);
         $this->assertStringContainsString(strtoupper($hqOfficer->name), $certificateHtml);
 

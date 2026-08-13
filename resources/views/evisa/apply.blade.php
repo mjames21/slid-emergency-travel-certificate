@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Apply for Sierra Leone Emergency Travel Certificate | SLID LEAPS</title>
+    <title>Office Entry for Sierra Leone Emergency Travel Certificate | SLID LEAPS</title>
+    @include('partials.pwa')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-100 text-gray-950 antialiased">
@@ -70,19 +71,19 @@
 
         <div class="overflow-hidden border border-gray-300 bg-white shadow-sm">
             <div class="border-b border-emerald-900 bg-emerald-950 px-4 py-3 text-white sm:px-5">
-                <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Official emergency travel certificate application</div>
-                <h1 class="mt-1 text-xl font-bold tracking-tight">Sierra Leone Emergency Travel Certificate Application</h1>
+                <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Official emergency travel certificate office entry</div>
+                <h1 class="mt-1 text-xl font-bold tracking-tight">Sierra Leone Emergency Travel Certificate Office Entry</h1>
                 <p class="mt-1 max-w-4xl text-sm leading-5 text-emerald-50">
-                    Complete the SLID ETC form online: evidence, personal details, contact or guardian details, destination, declaration, and WanGov/GovPay payment.
+                    Complete the SLID ETC form at the immigration desk: evidence, personal details, contact or guardian details, destination, declaration, and WanGov/GovPay payment.
                 </p>
                 <div class="mt-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-200">
-                    No account required. A tracking code and status link are issued after submission.
+                    Staff login required. The traveler provides details in person and receives a payment reference after submission.
                 </div>
             </div>
 
             <div class="grid lg:grid-cols-[230px_1fr]">
                 <aside class="border-b border-gray-200 bg-gray-50 p-3 lg:border-b-0 lg:border-r">
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500">Application sections</div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500">Entry sections</div>
                     <div class="mt-2 space-y-1.5">
                         @foreach ([
                             1 => 'Evidence',
@@ -133,13 +134,13 @@
                         <section data-step="1" class="space-y-4">
                             <div class="border-b border-gray-200 pb-2">
                                 <div class="text-xs font-bold uppercase tracking-wide text-emerald-700">Step 1 of 5</div>
-                                <h2 class="mt-1 text-xl font-bold">Application Type and Evidence</h2>
-                                <p class="mt-1 text-sm text-gray-600">Select the form category, then upload identity evidence.</p>
+                                <h2 class="mt-1 text-xl font-bold">Traveler Type and Evidence</h2>
+                                <p class="mt-1 text-sm text-gray-600">Select the traveler category, then upload identity evidence.</p>
                             </div>
 
                             <div class="grid gap-3 md:grid-cols-2">
                                 <div class="rounded-md border border-gray-200 bg-white p-3">
-                                    <label class="text-sm font-bold text-gray-900">Applicant Type <span class="text-red-600">*</span></label>
+                                    <label class="text-sm font-bold text-gray-900">Traveler Type <span class="text-red-600">*</span></label>
                                     <div class="mt-2 grid grid-cols-2 gap-2">
                                         <label class="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold">
                                             <input type="radio" name="applicant_category" value="adult" @checked(old('applicant_category', 'adult') === 'adult') class="text-emerald-700 focus:ring-emerald-600">
@@ -183,13 +184,15 @@
 
                                     <div>
                                         <label class="text-sm font-bold text-gray-900">Passport / NIN evidence <span class="text-red-600">*</span></label>
-                                        <input id="passport_biodata_image" name="passport_biodata_image" type="file" accept="image/*" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <input id="passport_biodata_image" name="passport_biodata_image" type="file" accept="image/*" data-compress-image data-compress-label="Passport / NIN evidence" data-compress-status="#passport_biodata_image_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <div id="passport_biodata_image_status" class="mt-1 text-xs text-gray-500">Images over 2 MB are compressed before upload.</div>
                                         @error('passport_biodata_image') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-bold text-gray-900">Applicant Photo <span class="text-red-600">*</span></label>
-                                        <input name="applicant_photo" type="file" accept="image/*" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <label class="text-sm font-bold text-gray-900">Traveler Photo <span class="text-red-600">*</span></label>
+                                        <input name="applicant_photo" type="file" accept="image/*" data-compress-image data-compress-label="Traveler photo" data-compress-status="#applicant_photo_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <div id="applicant_photo_status" class="mt-1 text-xs text-gray-500">Images over 2 MB are compressed before upload.</div>
                                         @error('applicant_photo') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
@@ -343,7 +346,7 @@
                             <div class="border-b border-gray-200 pb-3">
                                 <div class="text-xs font-bold uppercase tracking-wide text-emerald-700">Step 3 of 5</div>
                                 <h2 class="mt-1 text-xl font-bold">Address, Contact, and Guardian</h2>
-                                <p class="mt-1 text-sm text-gray-600">Applicant address and phone match the paper form. Guardian details are required for child applicants.</p>
+                                <p class="mt-1 text-sm text-gray-600">Traveler address and phone match the paper form. Guardian details are required for child travelers.</p>
                             </div>
 
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
@@ -384,9 +387,9 @@
                                 <div class="flex items-start justify-between gap-4">
                                     <div>
                                         <h3 class="text-base font-bold text-gray-950">Parent / Guardian Details</h3>
-                                        <p class="mt-1 text-sm text-gray-600">Required for applicants under sixteen (16).</p>
+                                        <p class="mt-1 text-sm text-gray-600">Required for travelers under sixteen (16).</p>
                                     </div>
-                                    <span class="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">Child applicants</span>
+                                    <span class="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">Child travelers</span>
                                 </div>
 
                                 <div class="mt-4 grid gap-4 md:grid-cols-2">
@@ -397,7 +400,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Relationship to Applicant</label>
+                                        <label class="text-sm font-semibold text-gray-700">Relationship to Traveler</label>
                                         <input data-guardian-field name="guardian_relationship" value="{{ old('guardian_relationship') }}" placeholder="Father, mother, guardian" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_relationship') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
@@ -435,8 +438,8 @@
                         <section data-step="4" class="hidden space-y-5">
                             <div class="border-b border-gray-200 pb-3">
                                 <div class="text-xs font-bold uppercase tracking-wide text-emerald-700">Step 4 of 5</div>
-                                <h2 class="mt-1 text-xl font-bold">Destination and Purpose of Traveling</h2>
-                                <p class="mt-1 text-sm text-gray-600">This mirrors the destination and purpose fields on the current ETC paper form.</p>
+                                <h2 class="mt-1 text-xl font-bold">Destination and Purpose of Travel</h2>
+                                <p class="mt-1 text-sm text-gray-600">Record destination, purpose, and route details for air, road, or sea travel.</p>
                             </div>
 
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
@@ -448,8 +451,8 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Carrier / Flight, if known</label>
-                                        <input name="flight_carrier" value="{{ old('flight_carrier') }}" type="text" list="etc-flight-carrier-list" placeholder="Airline or carrier" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label class="text-sm font-semibold text-gray-700">Carrier / Transport, if known</label>
+                                        <input name="flight_carrier" value="{{ old('flight_carrier') }}" type="text" list="etc-flight-carrier-list" placeholder="Airline, bus operator, vessel, or vehicle" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         <datalist id="etc-flight-carrier-list">
                                             @foreach ($flightCarriers as $carrier)
                                                 <option value="{{ $carrier['name'] }}">{{ $carrier['code'] ?? '' }}</option>
@@ -475,13 +478,13 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Flight Number, if known</label>
-                                        <input name="flight_number" value="{{ old('flight_number') }}" placeholder="Flight number" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label class="text-sm font-semibold text-gray-700">Reference, if known</label>
+                                        <input name="flight_number" value="{{ old('flight_number') }}" placeholder="Flight, vehicle plate, ticket, or border reference" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Travel Details / Remarks</label>
-                                        <input name="flight_details" value="{{ old('flight_details') }}" placeholder="Route or emergency travel details" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label class="text-sm font-semibold text-gray-700">Route Details</label>
+                                        <input name="flight_details" value="{{ old('flight_details') }}" placeholder="Example: Freetown to Conakry by road via Gbalamuya" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                     </div>
 
                                     <div class="md:col-span-2">
@@ -500,14 +503,14 @@
                         <section data-step="5" class="hidden space-y-5">
                             <div class="border-b border-gray-200 pb-3">
                                 <div class="text-xs font-bold uppercase tracking-wide text-emerald-700">Step 5 of 5</div>
-                                <h2 class="mt-1 text-xl font-bold">Declaration and Payment</h2>
-                                <p class="mt-1 text-sm text-gray-600">Submit the official ETC request. Payment details are handled after submission and recorded against the application.</p>
+                                <h2 class="mt-1 text-xl font-bold">Officer Declaration and Payment</h2>
+                                <p class="mt-1 text-sm text-gray-600">Submit the office-assisted ETC request. Payment details are handled after submission and recorded against the request.</p>
                             </div>
 
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
-                                <h3 class="text-base font-bold text-gray-950">Official use and online payment</h3>
+                                <h3 class="text-base font-bold text-gray-950">Official use and payment</h3>
                                 <p class="mt-2 text-sm leading-6 text-gray-700">
-                                    ETC applications use online WanGov/GovPay payment after submission. One authorized ETC Issuer approves and issues the certificate after payment is confirmed.
+                                    ETC requests are entered by an authorized officer at the immigration desk. One ETC Issuer approves and issues the certificate after WanGov/GovPay payment is confirmed.
                                 </p>
                                 <div class="mt-4 grid gap-3 md:grid-cols-3">
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
@@ -515,7 +518,7 @@
                                         <div class="mt-1 text-gray-600">Issuer approval record</div>
                                     </div>
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
-                                        <div class="font-semibold text-gray-900">Online Payment</div>
+                                        <div class="font-semibold text-gray-900">Payment</div>
                                         <div class="mt-1 text-gray-600">WanGov/GovPay fee confirmation</div>
                                     </div>
                                     <div class="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
@@ -526,10 +529,10 @@
                             </div>
 
                             <div class="rounded-md border border-gray-300 bg-gray-50 p-4">
-                                <h3 class="text-base font-bold text-gray-950">Applicant certification</h3>
+                                <h3 class="text-base font-bold text-gray-950">Officer certification</h3>
                                 <label class="mt-3 flex gap-3 text-sm leading-6 text-gray-800">
                                     <input name="applicant_certification" value="1" type="checkbox" @checked(old('applicant_certification')) class="mt-1 rounded border-gray-300 text-emerald-700 focus:ring-emerald-600">
-                                    <span>I certify that I have reviewed this Emergency Travel Certificate application and that the information provided is true and complete.</span>
+                                    <span>I certify that the traveler is present or represented at the immigration desk and that I have entered the provided Emergency Travel Certificate details for official processing.</span>
                                 </label>
                                 @error('applicant_certification') <div class="mt-2 text-xs text-red-600">{{ $message }}</div> @enderror
                             </div>
@@ -537,13 +540,13 @@
                             <div class="rounded-md border border-emerald-200 bg-emerald-50 p-4">
                                 <h3 class="text-base font-bold text-emerald-950">Payment step</h3>
                                 <p class="mt-2 text-sm leading-6 text-emerald-900">
-                                    After submission, the system creates a tracking code and opens the WanGov/GovPay fee payment page. The ETC Issuer reviews, approves, and issues the certificate after online payment is confirmed.
+                                    After submission, the system creates a payment reference for WanGov/GovPay. The ETC Issuer reviews, approves, and issues the certificate after payment is confirmed.
                                 </p>
                             </div>
 
                             <div class="flex justify-between border-t border-gray-200 pt-4">
                                 <button type="button" data-next-step="4" class="rounded-md border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700">Back</button>
-                                <button type="submit" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Submit and continue to payment</button>
+                                <button type="submit" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Submit office entry and continue to payment</button>
                             </div>
                         </section>
                     </form>
@@ -568,10 +571,26 @@
             const applicantCategoryInputs = Array.from(form.querySelectorAll('[name="applicant_category"]'));
             const guardianSection = document.getElementById('guardian-section');
             const guardianFields = Array.from(guardianSection?.querySelectorAll('[data-guardian-field]') || []);
+            const imageCompressionInputs = Array.from(form.querySelectorAll('[data-compress-image]'));
             const hasErrors = @json($errors->any());
             const errorStep = @json($errorStep);
             const draftKey = 'slid:etc:application:draft:v2';
+            const maxCompressedImageSize = 2 * 1024 * 1024;
+            const compressionJobs = new Set();
+            const compressedImageFiles = new WeakMap();
             let saveTimer = null;
+
+            const draftStorage = () => {
+                try {
+                    return window.localStorage || null;
+                } catch (_) {
+                    return null;
+                }
+            };
+
+            const removeDraft = () => {
+                draftStorage()?.removeItem(draftKey);
+            };
 
             const showStep = (step) => {
                 const currentStep = Number(step);
@@ -631,6 +650,10 @@
             };
 
             const saveDraft = () => {
+                const storage = draftStorage();
+
+                if (!storage) return;
+
                 const values = {};
                 draftFields().forEach((field) => {
                     if (field.type === 'radio') {
@@ -645,7 +668,7 @@
                 });
 
                 const savedAt = new Date().toISOString();
-                localStorage.setItem(draftKey, JSON.stringify({ savedAt, values }));
+                storage.setItem(draftKey, JSON.stringify({ savedAt, values }));
                 updateDraftStatus(savedAt);
             };
 
@@ -657,8 +680,12 @@
             const restoreDraft = () => {
                 if (hasErrors) return;
 
+                const storage = draftStorage();
+
+                if (!storage) return;
+
                 try {
-                    const draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+                    const draft = JSON.parse(storage.getItem(draftKey) || 'null');
                     if (!draft?.values) return;
 
                     draftFields().forEach((field) => {
@@ -679,7 +706,7 @@
 
                     updateDraftStatus(draft.savedAt);
                 } catch (_) {
-                    localStorage.removeItem(draftKey);
+                    storage.removeItem(draftKey);
                 }
             };
 
@@ -690,6 +717,241 @@
                     ? ['border-emerald-200', 'bg-emerald-50', 'text-emerald-800']
                     : ['border-amber-200', 'bg-amber-50', 'text-amber-800']));
                 message.textContent = text;
+            };
+
+            const formatFileSize = (bytes) => {
+                if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+                return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+            };
+
+            const setCompressionStatus = (input, text, tone = 'info') => {
+                const target = input.dataset.compressStatus
+                    ? document.querySelector(input.dataset.compressStatus)
+                    : null;
+
+                if (!target) return;
+
+                target.textContent = text;
+                target.classList.remove('text-gray-500', 'text-emerald-700', 'text-red-600');
+                target.classList.add({
+                    success: 'text-emerald-700',
+                    error: 'text-red-600',
+                    info: 'text-gray-500',
+                }[tone] || 'text-gray-500');
+            };
+
+            const clearCompressionState = (input) => {
+                compressedImageFiles.delete(input);
+                delete input.dataset.compressedReady;
+                delete input.dataset.compressedSize;
+            };
+
+            const readImage = (file) => new Promise((resolve, reject) => {
+                const image = new Image();
+                const url = URL.createObjectURL(file);
+
+                image.onload = () => {
+                    URL.revokeObjectURL(url);
+                    resolve(image);
+                };
+
+                image.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('The selected image could not be compressed. Use JPG, PNG, or WebP.'));
+                };
+
+                image.src = url;
+            });
+
+            const canvasToBlob = (canvas, quality) => new Promise((resolve) => {
+                canvas.toBlob(resolve, 'image/jpeg', quality);
+            });
+
+            const drawImageToCanvas = (image, maxDimension) => {
+                const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+                const width = Math.max(1, Math.round(image.naturalWidth * scale));
+                const height = Math.max(1, Math.round(image.naturalHeight * scale));
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                if (!context) {
+                    throw new Error('The selected image could not be compressed.');
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, width, height);
+                context.drawImage(image, 0, 0, width, height);
+
+                return canvas;
+            };
+
+            const compressedFileName = (name) => {
+                const basename = name.replace(/\.[^.]+$/, '') || 'image';
+
+                return `${basename}.jpg`;
+            };
+
+            const compressImageFile = async (file) => {
+                const image = await readImage(file);
+                let maxDimension = 1800;
+                let quality = 0.84;
+                let smallestBlob = null;
+
+                for (let attempt = 0; attempt < 10; attempt += 1) {
+                    const canvas = drawImageToCanvas(image, maxDimension);
+                    const blob = await canvasToBlob(canvas, quality);
+
+                    if (!blob) {
+                        throw new Error('The selected image could not be compressed.');
+                    }
+
+                    if (!smallestBlob || blob.size < smallestBlob.size) {
+                        smallestBlob = blob;
+                    }
+
+                    if (blob.size <= maxCompressedImageSize) {
+                        return new File([blob], compressedFileName(file.name), {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                    }
+
+                    if (quality > 0.48) {
+                        quality -= 0.12;
+                    } else {
+                        maxDimension = Math.max(900, Math.floor(maxDimension * 0.82));
+                    }
+                }
+
+                if (smallestBlob && smallestBlob.size < file.size) {
+                    return new File([smallestBlob], compressedFileName(file.name), {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                }
+
+                throw new Error('The selected image is still above 2 MB after compression.');
+            };
+
+            const compressSelectedImage = async (input) => {
+                const file = input.files?.[0];
+
+                if (!file) {
+                    clearCompressionState(input);
+                    setCompressionStatus(input, 'Images over 2 MB are compressed before upload.');
+                    return;
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    clearCompressionState(input);
+                    return;
+                }
+
+                if (file.size <= maxCompressedImageSize) {
+                    clearCompressionState(input);
+                    setCompressionStatus(input, `${input.dataset.compressLabel || 'Image'} ready (${formatFileSize(file.size)}).`);
+                    return;
+                }
+
+                setCompressionStatus(input, `Compressing ${formatFileSize(file.size)} image...`);
+
+                const compressed = await compressImageFile(file);
+
+                if (compressed.size > maxCompressedImageSize) {
+                    input.value = '';
+                    throw new Error(`${input.dataset.compressLabel || 'Image'} is still ${formatFileSize(compressed.size)} after compression. Choose a clearer smaller image.`);
+                }
+
+                compressedImageFiles.set(input, compressed);
+                input.dataset.compressedReady = 'true';
+                input.dataset.compressedSize = String(compressed.size);
+                setCompressionStatus(
+                    input,
+                    `${input.dataset.compressLabel || 'Image'} compressed from ${formatFileSize(file.size)} to ${formatFileSize(compressed.size)}.`,
+                    'success'
+                );
+            };
+
+            const runCompressionJob = (input) => {
+                const job = compressSelectedImage(input)
+                    .catch((error) => {
+                        clearCompressionState(input);
+                        input.value = '';
+                        setCompressionStatus(input, error.message || 'Image compression failed.', 'error');
+                    })
+                    .finally(() => compressionJobs.delete(job));
+
+                compressionJobs.add(job);
+
+                return job;
+            };
+
+            const waitForCompression = async () => {
+                if (compressionJobs.size > 0) {
+                    await Promise.allSettled(Array.from(compressionJobs));
+                }
+            };
+
+            const hasBlockingCompressionError = () => imageCompressionInputs.some((input) => {
+                const file = input.files?.[0];
+                const needsCompression = file && file.type.startsWith('image/') && file.size > maxCompressedImageSize;
+
+                if (!needsCompression || compressedImageFiles.has(input)) {
+                    return false;
+                }
+
+                setCompressionStatus(
+                    input,
+                    `${input.dataset.compressLabel || 'Image'} must be compressed before upload. Re-select the image and try again.`,
+                    'error'
+                );
+
+                return true;
+            });
+
+            const submitFormWithCompressedImages = async (submitter) => {
+                await waitForCompression();
+
+                if (hasBlockingCompressionError()) {
+                    return;
+                }
+
+                const formData = new FormData(form);
+
+                imageCompressionInputs.forEach((input) => {
+                    const compressed = compressedImageFiles.get(input);
+
+                    if (compressed) {
+                        formData.set(input.name, compressed, compressed.name);
+                    }
+                });
+
+                if (submitter?.name && !formData.has(submitter.name)) {
+                    formData.append(submitter.name, submitter.value || '');
+                }
+
+                const response = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'text/html,application/xhtml+xml',
+                    },
+                });
+
+                const html = await response.text();
+
+                removeDraft();
+                document.open();
+                document.write(html);
+                document.close();
+
+                if (response.url) {
+                    window.history.replaceState({}, '', response.url);
+                }
             };
 
             const fillField = (name, value) => {
@@ -752,16 +1014,36 @@
                 clearErrorsForField(event.target);
                 scheduleDraftSave();
             });
-            form?.addEventListener('submit', () => localStorage.removeItem(draftKey));
+            form?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                try {
+                    await submitFormWithCompressedImages(event.submitter);
+                } catch (_) {
+                    imageCompressionInputs.forEach((input) => {
+                        const file = input.files?.[0];
+
+                        if (file && file.size > maxCompressedImageSize && !compressedImageFiles.has(input)) {
+                            setCompressionStatus(input, 'Image upload could not be prepared. Re-select the image and try again.', 'error');
+                        }
+                    });
+                }
+            });
+
+            imageCompressionInputs.forEach((input) => {
+                input.addEventListener('change', () => runCompressionJob(input));
+            });
 
             clearDraftButton?.addEventListener('click', () => {
-                localStorage.removeItem(draftKey);
+                removeDraft();
                 updateDraftStatus();
             });
 
             readButton?.addEventListener('click', async () => {
+                await waitForCompression();
+
                 const formData = new FormData();
-                const file = fileInput?.files?.[0];
+                const file = compressedImageFiles.get(fileInput) || fileInput?.files?.[0];
                 const line1 = form.querySelector('[name="mrz_line_1"]')?.value || '';
                 const line2 = form.querySelector('[name="mrz_line_2"]')?.value || '';
 

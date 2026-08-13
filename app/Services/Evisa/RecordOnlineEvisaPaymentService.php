@@ -31,9 +31,9 @@ class RecordOnlineEvisaPaymentService
 
             $payment = Payment::query()->create([
                 'invoice_id' => $invoice->id,
-                'confirmed_by' => null,
+                'confirmed_by' => $payload['confirmed_by'] ?? $payload['recorded_by'] ?? null,
                 'gateway' => $payload['gateway'] ?? 'online_etc',
-                'gateway_transaction_id' => $payload['gateway_transaction_id'] ?? 'ETC-' . Str::uuid(),
+                'gateway_transaction_id' => $payload['gateway_transaction_id'] ?? 'ETC-'.Str::uuid(),
                 'gateway_reference' => $payload['gateway_reference'] ?? $invoice->payment_reference,
                 'payment_channel' => $payload['payment_channel'] ?? 'online',
                 'amount_due' => $invoice->amount,

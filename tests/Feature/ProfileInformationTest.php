@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Jetstream\Http\Livewire\UpdateProfileInformationForm;
+use Laravel\Passkeys\Contracts\PasskeyUser;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -50,5 +51,31 @@ class ProfileInformationTest extends TestCase
             ->assertHasErrors(['email']);
 
         $this->assertEquals('current@immigration.gov.sl', $user->fresh()->email);
+    }
+
+    public function test_user_model_supports_passkeys(): void
+    {
+        $this->assertInstanceOf(PasskeyUser::class, User::factory()->create());
+    }
+
+    public function test_profile_shows_passkey_management(): void
+    {
+        $this->actingAs($user = User::factory()->create());
+
+        $user->passkeys()->create([
+            'name' => 'Office MacBook',
+            'credential_id' => 'test-credential-id',
+            'credential' => [
+                'aaguid' => '00000000-0000-0000-0000-000000000000',
+            ],
+            'last_used_at' => now(),
+        ]);
+
+        $this->get(route('profile.show'))
+            ->assertOk()
+            ->assertSee('Passkeys')
+            ->assertSee('Register Passkey')
+            ->assertSee('Office MacBook')
+            ->assertSee('data-passkey-registration', false);
     }
 }

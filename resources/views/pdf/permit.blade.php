@@ -347,7 +347,7 @@
             <td class="qr-col" rowspan="8">
                 @if (!empty($qrImageBase64))
                     <div class="qr-box">
-                        <img src="{{ $qrImageBase64 }}" alt="QR Code">
+                        <img src="{{ $qrImageBase64 }}" alt="Verification QR Code">
                     </div>
                 @endif
                 <div class="verify-code">
@@ -386,10 +386,11 @@
                 {{ strtoupper($permit->visaApplication->period_of_stay_text ?: $permit->visaApplication->period_of_stay_days . ' DAYS') }}
             </td>
         </tr>
+        @php($travelRoute = $permit->visaApplication->flight_details ?: trim(($permit->visaApplication->flight_carrier ?: '').' / '.($permit->visaApplication->flight_number ?: '')))
         <tr>
-            <td class="label-col">FLIGHT</td>
+            <td class="label-col">TRAVEL ROUTE</td>
             <td class="value-col" colspan="2">
-                {{ strtoupper($permit->visaApplication->flight_details ?: trim(($permit->visaApplication->flight_carrier ?: '') . '/' . ($permit->visaApplication->flight_number ?: ''))) }}
+                {{ $travelRoute !== '' ? strtoupper($travelRoute) : '—' }}
             </td>
         </tr>
         <tr>

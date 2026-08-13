@@ -4,17 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Emergency Travel Certificate Status | SLID LEAPS</title>
+    @include('partials.pwa')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.wan.gov.sl/wangov-embed.v1.2.9.js" defer></script>
 </head>
 <body class="bg-gray-50 text-gray-950 antialiased">
     @php
         $invoice = $application->latestInvoice;
         $isPaid = $invoice?->status === \App\Enums\InvoiceStatus::Paid;
-        $isInitiated = $invoice?->status === \App\Enums\InvoiceStatus::Initiated;
-        $serviceName = (string) config('services.wangov.external.service_display', 'Sierra Leone Emergency Travel Certificate');
-        $serviceCode = (string) config('services.wangov.external.service_code', '');
-        $allowedMethods = trim((string) config('services.wangov.allowed_methods', ''));
     @endphp
     <main class="mx-auto max-w-4xl px-5 py-8">
         <div class="border border-gray-200 bg-white p-6 shadow-sm">
@@ -32,7 +28,7 @@
 
             <div class="mt-6 grid gap-4 md:grid-cols-2">
                 <div class="border border-gray-200 bg-gray-50 p-4">
-                    <div class="text-sm text-gray-500">Applicant</div>
+                    <div class="text-sm text-gray-500">Traveler</div>
                     <div class="mt-1 font-semibold text-gray-950">{{ $application->passenger?->full_name }}</div>
                     <div class="mt-1 text-sm text-gray-600">{{ $application->passenger?->passport_number }}</div>
                 </div>
@@ -45,32 +41,15 @@
 
             <div class="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                 <div class="font-bold">Required flow</div>
-                <div class="mt-1">Apply online and pay the ETC fee through WanGov/GovPay. One ETC Issuer approves and issues the official Emergency Travel Certificate after payment is confirmed.</div>
+                <div class="mt-1">An authorized officer enters the ETC request in the office. The traveler pays the ETC fee through WanGov/GovPay, the ETC Issuer records the receipt number, then issues the official Emergency Travel Certificate.</div>
             </div>
 
             <div class="mt-6 flex flex-wrap gap-3">
                 @if ($invoice && ! $isPaid)
-                    <form method="POST" action="{{ route('etc.pay', $application->public_access_token) }}">
-                        @csrf
-                        <button type="submit" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">
-                            {{ $isInitiated ? 'Refresh Payment Checkout' : 'Start Certificate Payment' }}
-                        </button>
-                    </form>
-
-                    @if ($isInitiated)
-                        <button
-                            type="button"
-                            class="rounded-md bg-[#0072c5] px-5 py-3 text-sm font-bold text-white hover:brightness-95"
-                            data-wangov-checkout
-                            data-application-number="{{ $invoice->payment_reference }}"
-                            data-service-name="{{ $serviceName }}"
-                            data-service-code="{{ $serviceCode }}"
-                            data-service-fee="{{ $invoice->currency }} {{ number_format((float) $invoice->amount, 2, '.', '') }}"
-                            @if($allowedMethods !== '') data-allowed-methods="{{ $allowedMethods }}" @endif
-                        >
-                            Pay Certificate Application Fee
-                        </button>
-                    @endif
+                    <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+                        Payment not recorded. Use the payment reference {{ $invoice->payment_reference }} and record the WanGov/GovPay receipt number on the HQ request screen.
+                    </div>
+                    <a href="{{ route('hq.emergency-travel-certificates.index') }}" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Back to ETC Requests</a>
                 @elseif (! $application->permit)
                     <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
                         Payment received. Pending ETC Issuer approval and issue.
@@ -79,30 +58,14 @@
 
                 @if ($application->permit)
                     <a href="{{ route('verify.permit', $application->permit->verification_code) }}" class="rounded-md border border-gray-300 px-5 py-3 text-sm font-bold text-gray-800">Verify Issued Certificate</a>
+                    <a href="{{ route('digital.certificates.show', $application->permit->verification_code) }}" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Open Digital ETC</a>
                 @endif
             </div>
 
             <div class="mt-8 border-t border-gray-200 pt-5 text-sm leading-7 text-gray-600">
-                The ETC Issuer reviews paid Emergency Travel Certificate applications after WanGov/GovPay payment is confirmed. If approved, the certificate is issued and sent to the applicant email for verification.
+                The ETC Issuer reviews office-assisted Emergency Travel Certificate requests after WanGov/GovPay payment is confirmed. If approved, the certificate is issued and sent to the traveler email for verification.
             </div>
         </div>
     </main>
-    <script>
-        (function () {
-            function bootWanGov() {
-                try { window.WanGov?.checkout?.auto?.(); } catch (_) {}
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                bootWanGov();
-
-                var reference = @json(session('auto_checkout_reference'));
-                if (!reference) return;
-
-                var button = document.querySelector('[data-wangov-checkout][data-application-number="' + reference + '"]');
-                if (button) button.click();
-            });
-        })();
-    </script>
 </body>
 </html>

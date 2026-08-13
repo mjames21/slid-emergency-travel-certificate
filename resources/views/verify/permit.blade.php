@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Emergency Travel Certificate Verification</title>
+    @include('partials.pwa')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -26,7 +27,7 @@
                 </div>
                 <h1 class="mt-1 text-2xl font-bold text-gray-900">Emergency Travel Certificate Verification</h1>
                 <p class="mt-1 text-sm text-gray-600">
-                    Official public verification result.
+                    Official certificate verification result.
                 </p>
             </div>
 
@@ -80,6 +81,12 @@
                 <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                     Only certificates that verify on this official page should be accepted as valid immigration documents.
                 </div>
+
+                @if ($permit->is_virtual_available)
+                    <a href="{{ route('digital.certificates.show', $permit->verification_code) }}" class="inline-flex rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">
+                        Open Digital ETC
+                    </a>
+                @endif
             </div>
         </div>
     </div>

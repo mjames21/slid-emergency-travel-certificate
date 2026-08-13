@@ -31,13 +31,11 @@ class GeneratePermitPdfService
 
         $path = 'documents/permits/'.$permit->permit_no.'.pdf';
 
-        if (! $permit->qr_code_path || ! Storage::disk('local')->exists($permit->qr_code_path)) {
-            $permit->update([
-                'qr_code_path' => $this->generateQrCodeService->handle($permit),
-            ]);
+        $permit->update([
+            'qr_code_path' => $this->generateQrCodeService->handle($permit),
+        ]);
 
-            $permit->refresh();
-        }
+        $permit->refresh();
 
         $qrRaw = Storage::disk('local')->get($permit->qr_code_path);
         $qrImageBase64 = 'data:image/svg+xml;base64,'.base64_encode($qrRaw);

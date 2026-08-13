@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Country;
 use App\Models\Permit;
 use App\Models\PermitVerification;
+use App\Models\StaffTitle;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -20,7 +21,7 @@ class ProductionHardeningTest extends TestCase
     #[Test]
     public function public_pages_emit_baseline_security_headers(): void
     {
-        $response = $this->get('/emergency-travel-certificate/apply');
+        $response = $this->get('/login');
 
         $response->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff')
@@ -41,6 +42,35 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString("frame-ancestors 'self'", $contentSecurityPolicy);
         $this->assertStringContainsString("base-uri 'self'", $contentSecurityPolicy);
         $this->assertStringContainsString('https://cdn.wan.gov.sl', $contentSecurityPolicy);
+        $this->assertStringNotContainsString("'unsafe-eval'", $contentSecurityPolicy);
+    }
+
+    #[Test]
+    public function livewire_staff_pages_allow_the_runtime_evaluator_without_relaxing_public_pages(): void
+    {
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
+        $response = $this->get('/hq/emergency-travel-certificates');
+
+        $response->assertOk();
+
+        $contentSecurityPolicy = (string) $response->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("script-src 'self' 'unsafe-inline'", $contentSecurityPolicy);
+        $this->assertStringContainsString("'unsafe-eval'", $contentSecurityPolicy);
+    }
+
+    #[Test]
+    public function livewire_asset_responses_allow_the_runtime_evaluator(): void
+    {
+        $response = $this->get('/livewire/livewire.js');
+
+        $response->assertOk();
+
+        $this->assertStringContainsString(
+            "'unsafe-eval'",
+            (string) $response->headers->get('Content-Security-Policy')
+        );
     }
 
     #[Test]
@@ -52,7 +82,7 @@ class ProductionHardeningTest extends TestCase
             'security.headers.hsts_max_age' => 31536000,
         ]);
 
-        $response = $this->get('https://localhost/emergency-travel-certificate/apply');
+        $response = $this->get('https://localhost/login');
 
         $response->assertOk();
 
@@ -63,13 +93,14 @@ class ProductionHardeningTest extends TestCase
     }
 
     #[Test]
-    public function sensitive_public_status_pages_are_not_browser_cached(): void
+    public function sensitive_office_status_pages_are_not_browser_cached(): void
     {
         Storage::fake('local');
 
         config(['features.emergency_travel_certificate' => true]);
 
-        User::factory()->create();
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
         Country::query()->create([
             'name' => 'Sierra Leone',
             'iso2' => 'SL',
@@ -130,9 +161,33 @@ class ProductionHardeningTest extends TestCase
     }
 
     #[Test]
-    public function public_etc_status_token_guessing_is_rate_limited_by_ip(): void
+    public function digital_etc_certificate_pages_are_not_browser_cached(): void
+    {
+        Storage::fake('local');
+
+        $permit = Permit::factory()->create([
+            'verification_code' => 'SVV-NO-CACHE-DIGITAL',
+        ]);
+
+        $response = $this->get(route('digital.certificates.show', $permit->verification_code));
+
+        $response->assertOk()
+            ->assertHeader('Pragma', 'no-cache')
+            ->assertHeader('Expires', '0');
+
+        $cacheControl = (string) $response->headers->get('Cache-Control');
+
+        foreach (['no-store', 'no-cache', 'must-revalidate', 'private'] as $directive) {
+            $this->assertStringContainsString($directive, $cacheControl);
+        }
+    }
+
+    #[Test]
+    public function office_etc_status_token_guessing_is_rate_limited_by_ip(): void
     {
         config(['features.emergency_travel_certificate' => true]);
+
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
 
         for ($attempt = 0; $attempt < 30; $attempt++) {
             $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.20'])
@@ -195,5 +250,28 @@ class ProductionHardeningTest extends TestCase
         ]);
 
         $this->assertSame(2, PermitVerification::query()->count());
+    }
+
+    private function actingAsStaffUserWithTitle(string $code, string $name): User
+    {
+        $title = StaffTitle::query()->firstOrCreate(
+            ['code' => $code],
+            [
+                'name' => $name,
+                'description' => "{$name} test role",
+                'active' => true,
+            ]
+        );
+
+        $user = User::factory()->create(['active' => true]);
+
+        $user->staffTitles()->attach($title->id, [
+            'assigned_at' => now(),
+            'is_primary' => true,
+        ]);
+
+        $this->actingAs($user);
+
+        return $user->fresh(['staffTitles']);
     }
 }

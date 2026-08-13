@@ -15,19 +15,23 @@ class GenerateQrCodeService
 {
     public function handle(Permit $permit): string
     {
-        $path = 'qrcodes/' . $permit->permit_no . '.svg';
-        $url = route('verify.permit', $permit->verification_code);
+        $path = 'qrcodes/'.$permit->permit_no.'.svg';
 
         $renderer = new ImageRenderer(
             new RendererStyle(180, 1),
-            new SvgImageBackEnd()
+            new SvgImageBackEnd
         );
 
         $writer = new Writer($renderer);
-        $svg = $writer->writeString($url);
+        $svg = $writer->writeString($this->verificationPayload($permit));
 
         Storage::disk('local')->put($path, $svg);
 
         return $path;
+    }
+
+    public function verificationPayload(Permit $permit): string
+    {
+        return route('verify.permit', $permit->verification_code);
     }
 }

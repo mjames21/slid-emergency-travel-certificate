@@ -7,6 +7,7 @@
 
         <title>{{ config('app.name', 'SLID Emergency Travel Certificate') }}</title>
 
+        @include('partials.pwa')
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
@@ -38,10 +39,12 @@
                                 ETC Applications
                             </a>
 
-                            <a href="{{ route('etc.apply') }}"
-                               class="block rounded-lg px-4 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-900 hover:text-white">
-                                Public Application
-                            </a>
+                            @if ($user?->hasStaffTitle('etc_issuer'))
+                                <a href="{{ route('etc.apply') }}"
+                                   class="{{ request()->routeIs('etc.apply') ? 'bg-emerald-800 text-white' : 'text-emerald-100 hover:bg-emerald-900 hover:text-white' }} block rounded-lg px-4 py-3 text-sm font-medium">
+                                    Office Application
+                                </a>
+                            @endif
 
                             @if ($user?->hasStaffTitle('system_administrator'))
                                 <div class="px-4 pt-4 text-xs font-semibold uppercase tracking-wider text-emerald-300">Administration</div>

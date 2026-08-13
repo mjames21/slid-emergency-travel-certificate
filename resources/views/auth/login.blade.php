@@ -44,5 +44,26 @@
                 </x-button>
             </div>
         </form>
+
+        @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::passkeys()))
+            <div class="my-6 flex items-center gap-3">
+                <div class="h-px flex-1 bg-gray-200"></div>
+                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ __('Or') }}</div>
+                <div class="h-px flex-1 bg-gray-200"></div>
+            </div>
+
+            <div
+                data-passkey-login
+                data-options-url="{{ route('passkey.login-options') }}"
+                data-login-url="{{ route('passkey.login') }}"
+                data-remember-selector="#remember_me"
+                class="space-y-3"
+            >
+                <x-secondary-button type="button" data-passkey-login-button class="w-full justify-center border-emerald-700 text-emerald-800 hover:bg-emerald-50">
+                    {{ __('Sign in with passkey') }}
+                </x-secondary-button>
+                <p data-passkey-login-status class="hidden text-sm font-medium"></p>
+            </div>
+        @endif
     </x-authentication-card>
 </x-guest-layout>

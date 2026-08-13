@@ -49,7 +49,7 @@ class CreateOnlineEvisaApplicationService
                     'passport_biodata_image_path' => $data['passport_biodata_image_path'] ?? null,
                     'passport_biodata_captured_at' => ! empty($data['passport_biodata_image_path']) ? now() : null,
                     'passport_biodata_capture_device' => ! empty($data['passport_biodata_image_path'])
-                        ? ($data['passport_biodata_capture_device'] ?? 'online-applicant-upload')
+                        ? ($data['passport_biodata_capture_device'] ?? 'office-assisted-capture')
                         : null,
                     'passport_mrz_raw' => $data['passport_mrz_raw'] ?? null,
                     'passport_mrz_data' => $data['passport_mrz_data'] ?? null,
@@ -64,7 +64,7 @@ class CreateOnlineEvisaApplicationService
                 'public_access_token' => Str::random(48),
                 'passenger_id' => $passenger->id,
                 'created_by' => $data['created_by'] ?? User::query()->oldest('id')->value('id'),
-                'submitted_by' => null,
+                'submitted_by' => $data['submitted_by'] ?? null,
                 'visa_type' => VisaApplication::TYPE_EMERGENCY_TRAVEL_CERTIFICATE,
                 'application_channel' => VisaApplication::CHANNEL_ONLINE_EMERGENCY_TRAVEL_CERTIFICATE,
                 'applicant_category' => ($data['applicant_category'] ?? null) ?: null,
@@ -121,7 +121,7 @@ class CreateOnlineEvisaApplicationService
             Invoice::query()->create([
                 'invoice_no' => $this->invoiceNumberGenerator->generate(),
                 'visa_application_id' => $application->id,
-                'created_by' => null,
+                'created_by' => $data['created_by'] ?? null,
                 'amount' => $data['amount'] ?? 80.00,
                 'currency' => $data['currency'] ?? 'USD',
                 'payment_reference' => $this->paymentReferenceGenerator->generate(),

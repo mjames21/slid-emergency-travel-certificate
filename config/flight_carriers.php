@@ -1,8 +1,24 @@
 <?php
 
-// Source: ETC carrier options for Sierra Leone outbound emergency travel.
-// Keep this as an operational list: schedules change, so update here when FNA publishes a new program.
+// Source: ETC transport options for Sierra Leone outbound emergency travel.
+// Keep this as an operational list: routes and carriers change, so update here when operations publish a new program.
 return [
+    [
+        'name' => 'Private vehicle',
+        'code' => 'ROAD',
+    ],
+    [
+        'name' => 'Commercial bus',
+        'code' => 'ROAD',
+    ],
+    [
+        'name' => 'Road border crossing',
+        'code' => 'BORDER',
+    ],
+    [
+        'name' => 'Sea vessel',
+        'code' => 'SEA',
+    ],
     [
         'name' => 'Air Peace',
         'code' => 'P4',

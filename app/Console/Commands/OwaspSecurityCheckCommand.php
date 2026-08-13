@@ -52,9 +52,11 @@ class OwaspSecurityCheckCommand extends Command
         $hqRoute = Route::getRoutes()->getByName('hq.emergency-travel-certificates.index');
         $dashboardRoute = Route::getRoutes()->getByName('dashboard');
         $documentRoute = Route::getRoutes()->getByName('documents.certificates.show');
+        $applyRoute = Route::getRoutes()->getByName('etc.apply');
         $statusRoute = Route::getRoutes()->getByName('etc.status');
         $payRoute = Route::getRoutes()->getByName('etc.pay');
         $verifyRoute = Route::getRoutes()->getByName('verify.permit');
+        $digitalCertificateRoute = Route::getRoutes()->getByName('digital.certificates.show');
         $webhookRoute = Route::getRoutes()->getByName('webhooks.wangov');
         $apiWebhookRoute = Route::getRoutes()->getByName('api.wangov.payment_update');
         $passkeyRoute = Route::getRoutes()->getByName('passkey.store');
@@ -80,6 +82,12 @@ class OwaspSecurityCheckCommand extends Command
                 'Sensitive certificate document route is staff-title gated',
                 $this->routeHasMiddleware($documentRoute, 'staff.title'),
                 'documents.certificates.show'
+            ),
+            $this->check(
+                'A01 Broken Access Control',
+                'Office-assisted ETC entry requires authenticated ETC issuer access',
+                $this->routeHasMiddleware($applyRoute, 'auth') && $this->routeHasMiddleware($applyRoute, 'staff.title'),
+                'etc.apply'
             ),
             $this->check(
                 'A02 Security Misconfiguration',
@@ -237,17 +245,18 @@ class OwaspSecurityCheckCommand extends Command
             ),
             $this->check(
                 'A10 Mishandling Exceptional Conditions',
-                'Sensitive public pages are no-store cached by security middleware',
+                'Sensitive office and verification pages are no-store cached by security middleware',
                 class_exists(AddSecurityHeaders::class),
                 'AddSecurityHeaders middleware'
             ),
             $this->check(
                 'A10 Mishandling Exceptional Conditions',
-                'Public token and verification routes are rate limited',
+                'Office status/payment and public verification routes are rate limited',
                 $this->routeHasMiddleware($statusRoute, 'throttle')
                     && $this->routeHasMiddleware($payRoute, 'throttle')
-                    && $this->routeHasMiddleware($verifyRoute, 'throttle'),
-                'etc.status / etc.pay / verify.permit'
+                    && $this->routeHasMiddleware($verifyRoute, 'throttle')
+                    && $this->routeHasMiddleware($digitalCertificateRoute, 'throttle'),
+                'etc.status / etc.pay / verify.permit / digital.certificates.show'
             ),
             $this->check(
                 'A10 Mishandling Exceptional Conditions',

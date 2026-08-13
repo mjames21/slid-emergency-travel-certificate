@@ -209,13 +209,16 @@ class EvisaApplicationController extends Controller
         ];
 
         $validated['applicant_certification_ip'] = $request->ip();
+        $validated['created_by'] = $request->user()?->id;
+        $validated['submitted_by'] = $request->user()?->id;
+        $validated['passport_biodata_capture_device'] = 'office-assisted-capture';
 
         $validated = array_merge($validated, $this->submittedMrzPayload($validated));
 
         $application = $service->handle($validated);
 
         return redirect()->route('etc.status', $application->public_access_token)
-            ->with('success', 'Your Emergency Travel Certificate application has been submitted. Continue to online payment.');
+            ->with('success', 'Office-assisted Emergency Travel Certificate request submitted. Continue to WanGov/GovPay payment.');
     }
 
     public function readPassport(
@@ -348,14 +351,13 @@ class EvisaApplicationController extends Controller
         }
 
         $message = match ($result['status'] ?? null) {
-            'already_paid' => 'Payment is already confirmed. Your application is pending HQ review.',
+            'already_paid' => 'Payment is already confirmed. This request is pending HQ review.',
             'sandbox_registered' => 'Payment request staged locally. WanGov credentials are not enabled in this environment.',
-            default => 'Online payment request is ready. Complete payment using the GovPay checkout button.',
+            default => 'Payment request is ready. Record the WanGov/GovPay receipt number after payment is completed.',
         };
 
         return redirect()->route('etc.status', $token)
-            ->with('success', $message)
-            ->with('auto_checkout_reference', $application->latestInvoice?->payment_reference);
+            ->with('success', $message);
     }
 
     protected function publicApplication(string $token): VisaApplication

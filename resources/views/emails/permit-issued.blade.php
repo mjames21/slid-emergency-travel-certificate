@@ -19,6 +19,12 @@
     </p>
 
     <p>
+        Open your Digital Emergency Travel Certificate:
+        <br>
+        {{ route('digital.certificates.show', $permit->verification_code) }}
+    </p>
+
+    <p>
         Traveler verification notice:
         verify before travel.
         A certificate that cannot be verified on the official system should not be accepted as valid.
