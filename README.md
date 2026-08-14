@@ -61,6 +61,8 @@ php artisan migrate --force
 php artisan db:seed
 ```
 
+The staff account seeder creates or repairs the System Administrator, ETC Issuer, and Executive Observer accounts. In production, set `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` before the first seed. Remove or blank those password variables after bootstrap unless you intentionally want a later `db:seed --force` to rotate that account password.
+
 Build frontend assets:
 
 ```bash
@@ -86,6 +88,7 @@ Production must set:
 - `WANGOV_ENABLED=true`
 - `WANGOV_SERVICE_KEY`, `WANGOV_BEARER_TOKEN`, and `WANGOV_WEBHOOK_SECRET`.
 - `SECURITY_STAFF_MFA_REQUIRED=true`
+- `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` for first-time staff account bootstrap.
 - Secure encrypted session cookies.
 - SMTP credentials for the approved SLID sender.
 
