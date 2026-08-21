@@ -9,6 +9,7 @@ use App\Models\StaffTitle;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
@@ -46,8 +47,12 @@ class ProductionHardeningTest extends TestCase
     }
 
     #[Test]
-    public function mismatched_session_cookie_domain_falls_back_to_a_host_only_cookie(): void
+    public function mismatched_session_cookie_domain_falls_back_even_when_logging_is_unavailable(): void
     {
+        Log::shouldReceive('warning')
+            ->once()
+            ->andThrow(new \UnexpectedValueException('Permission denied'));
+
         config([
             'session.domain' => '.slid.gov.sl',
             'session.secure' => true,

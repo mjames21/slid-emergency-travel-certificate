@@ -90,6 +90,7 @@ Production must set:
 - `SECURITY_STAFF_MFA_REQUIRED=true`
 - `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` for first-time staff account bootstrap.
 - Secure encrypted session cookies with `SESSION_DOMAIN=null` for a host-only login cookie.
+- `LOG_CHANNEL=stderr` so container logging does not depend on writable application files.
 - SMTP credentials for the approved SLID sender.
 
 Do not copy secrets from the permit operations project.

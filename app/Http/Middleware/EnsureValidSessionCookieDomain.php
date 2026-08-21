@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class EnsureValidSessionCookieDomain
 {
@@ -21,12 +22,16 @@ class EnsureValidSessionCookieDomain
             return $next($request);
         }
 
-        Log::warning('Session cookie domain does not match the request host; using a host-only cookie.', [
-            'configured_domain' => $configuredDomain,
-            'request_host' => $request->getHost(),
-        ]);
-
         config(['session.domain' => null]);
+
+        try {
+            Log::warning('Session cookie domain does not match the request host; using a host-only cookie.', [
+                'configured_domain' => $configuredDomain,
+                'request_host' => $request->getHost(),
+            ]);
+        } catch (Throwable) {
+            // Authentication must remain available when the logging backend is unavailable.
+        }
 
         try {
             return $next($request);
