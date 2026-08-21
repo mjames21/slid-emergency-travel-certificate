@@ -97,6 +97,15 @@ class OwaspSecurityCheckCommand extends Command
             ),
             $this->check(
                 'A02 Security Misconfiguration',
+                'Production application URL and session cookie domain are compatible',
+                ! $production || (
+                    $this->httpsUrlConfigured((string) config('app.url'))
+                    && $this->sessionCookieDomainMatchesAppUrl()
+                ),
+                'APP_URL / SESSION_DOMAIN'
+            ),
+            $this->check(
+                'A02 Security Misconfiguration',
                 'Security headers and CSP are enabled',
                 (bool) config('security.headers.enabled') && (bool) config('security.headers.content_security_policy'),
                 'SECURITY_HEADERS_ENABLED / SECURITY_CSP_ENABLED'
@@ -321,6 +330,24 @@ class OwaspSecurityCheckCommand extends Command
     {
         return strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https'
             && filled(parse_url($url, PHP_URL_HOST));
+    }
+
+    private function sessionCookieDomainMatchesAppUrl(): bool
+    {
+        $host = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+        $configuredDomain = config('session.domain');
+
+        if ($host === '') {
+            return false;
+        }
+
+        if (! is_string($configuredDomain) || trim($configuredDomain) === '') {
+            return true;
+        }
+
+        $domain = strtolower(ltrim(trim($configuredDomain), '.'));
+
+        return $host === $domain || str_ends_with($host, '.'.$domain);
     }
 
     private function checkoutRedirectHosts(): array

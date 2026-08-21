@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureStaffAccess;
 use App\Http\Middleware\EnsureStaffMfaEnabled;
 use App\Http\Middleware\EnsureStaffTitle;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\EnsureValidSessionCookieDomain;
 use App\Http\Middleware\EnsureVerifiedPermitAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,9 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             AddSecurityHeaders::class,
         ]);
 
-        $middleware->web(append: [
-            EnsureSessionIntegrity::class,
-        ]);
+        $middleware->web(
+            prepend: [EnsureValidSessionCookieDomain::class],
+            append: [EnsureSessionIntegrity::class],
+        );
 
         $middleware->alias([
             'active' => EnsureUserIsActive::class,

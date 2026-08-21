@@ -83,13 +83,13 @@ Production must set:
 
 - `APP_ENV=production`
 - `APP_DEBUG=false`
-- `APP_URL` to the official ETC domain.
+- `APP_URL=https://etc.slid.datahub.gov.sl` for the deployed ETC domain.
 - `APP_KEY` to a generated production key.
 - `WANGOV_ENABLED=true`
 - `WANGOV_SERVICE_KEY`, `WANGOV_BEARER_TOKEN`, and `WANGOV_WEBHOOK_SECRET`.
 - `SECURITY_STAFF_MFA_REQUIRED=true`
 - `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` for first-time staff account bootstrap.
-- Secure encrypted session cookies.
+- Secure encrypted session cookies with `SESSION_DOMAIN=null` for a host-only login cookie.
 - SMTP credentials for the approved SLID sender.
 
 Do not copy secrets from the permit operations project.

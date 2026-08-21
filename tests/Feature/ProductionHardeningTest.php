@@ -46,6 +46,23 @@ class ProductionHardeningTest extends TestCase
     }
 
     #[Test]
+    public function mismatched_session_cookie_domain_falls_back_to_a_host_only_cookie(): void
+    {
+        config([
+            'session.domain' => '.slid.gov.sl',
+            'session.secure' => true,
+        ]);
+
+        $response = $this->get('https://etc.slid.datahub.gov.sl/login');
+        $sessionCookie = collect($response->headers->getCookies())
+            ->first(fn ($cookie): bool => $cookie->getName() === config('session.cookie'));
+
+        $response->assertOk();
+        $this->assertNotNull($sessionCookie);
+        $this->assertNull($sessionCookie->getDomain());
+    }
+
+    #[Test]
     public function livewire_staff_pages_allow_the_runtime_evaluator_without_relaxing_public_pages(): void
     {
         $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');

@@ -17,6 +17,9 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Sign in with passkey');
         $response->assertSee('data-passkey-login', false);
+        $response->assertSee('data-password-toggle="password"', false);
+        $response->assertSee('aria-label="Show password"', false);
+        $response->assertDontSee('fonts.bunny.net', false);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

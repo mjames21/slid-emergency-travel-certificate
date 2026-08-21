@@ -122,6 +122,32 @@ const serializeAssertion = (credential) => ({
 
 const passkeysAvailable = () => window.PublicKeyCredential && navigator.credentials;
 
+const setupPasswordToggles = () => {
+    document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+        const input = document.getElementById(button.dataset.passwordToggle);
+        const showIcon = button.querySelector('[data-password-icon="show"]');
+        const hideIcon = button.querySelector('[data-password-icon="hide"]');
+
+        if (!input || button.dataset.passwordToggleReady === 'true') {
+            return;
+        }
+
+        button.dataset.passwordToggleReady = 'true';
+        button.addEventListener('click', () => {
+            const isVisible = input.type === 'text';
+            const nextLabel = isVisible ? button.dataset.showLabel : button.dataset.hideLabel;
+
+            input.type = isVisible ? 'password' : 'text';
+            button.setAttribute('aria-label', nextLabel);
+            button.setAttribute('aria-pressed', String(!isVisible));
+            button.title = nextLabel;
+            showIcon?.classList.toggle('hidden', !isVisible);
+            hideIcon?.classList.toggle('hidden', isVisible);
+            input.focus({ preventScroll: true });
+        });
+    });
+};
+
 const setupPasskeyRegistration = () => {
     document.querySelectorAll('[data-passkey-registration]').forEach((container) => {
         const button = container.querySelector('[data-passkey-register]');
@@ -219,6 +245,7 @@ const setupPasskeyLogin = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupPasswordToggles();
     setupPasskeyRegistration();
     setupPasskeyLogin();
 

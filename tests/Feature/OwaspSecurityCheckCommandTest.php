@@ -38,11 +38,23 @@ class OwaspSecurityCheckCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
+    #[Test]
+    public function owasp_check_fails_when_session_cookie_domain_does_not_match_app_url(): void
+    {
+        $this->setProductionSafeConfig([
+            'session.domain' => '.slid.gov.sl',
+        ]);
+
+        $this->artisan('security:owasp-check', ['--production' => true])
+            ->assertExitCode(1);
+    }
+
     private function setProductionSafeConfig(array $overrides = []): void
     {
         config(array_replace([
             'app.debug' => false,
             'app.key' => 'base64:test-owasp-key',
+            'app.url' => 'https://etc.slid.datahub.gov.sl',
             'fortify.limiters.login' => 'login',
             'fortify.limiters.two-factor' => 'two-factor',
             'fortify.limiters.passkeys' => 'passkeys',
@@ -62,6 +74,7 @@ class OwaspSecurityCheckCommandTest extends TestCase
             'services.wangov.webhook.vendor_secret' => 'test-webhook-secret-1234567890abcdef',
             'services.wangov.webhook.max_payload_bytes' => 20000,
             'session.encrypt' => true,
+            'session.domain' => null,
             'session.http_only' => true,
             'session.same_site' => 'strict',
             'session.secure' => true,
