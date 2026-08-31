@@ -29,18 +29,29 @@ class ApproveOnlineEvisaApplicationService
             throw new RuntimeException('Only online Emergency Travel Certificate applications can be approved and issued through this workflow.');
         }
 
-        $application->loadMissing(['latestInvoice.payments', 'passenger']);
+        [$permit, $created] = DB::transaction(function () use ($application, $issuer) {
+            $lockedApplication = VisaApplication::query()
+                ->with(['latestInvoice.payments', 'passenger', 'permit'])
+                ->lockForUpdate()
+                ->findOrFail($application->id);
 
-        $hasSuccessfulPayment = $application->latestInvoice?->payments()
-            ->where('status', 'successful')
-            ->exists() ?? false;
+            if ($lockedApplication->application_channel !== VisaApplication::CHANNEL_ONLINE_EMERGENCY_TRAVEL_CERTIFICATE) {
+                throw new RuntimeException('Only online Emergency Travel Certificate applications can be approved and issued through this workflow.');
+            }
 
-        if (! $hasSuccessfulPayment) {
-            throw new RuntimeException('Emergency Travel Certificate application must be paid before approval and issue.');
-        }
+            if ($lockedApplication->permit) {
+                return [$lockedApplication->permit->fresh(['visaApplication.passenger']), false];
+            }
 
-        return DB::transaction(function () use ($application, $issuer) {
-            $application->update([
+            $hasSuccessfulPayment = $lockedApplication->latestInvoice?->payments()
+                ->where('status', 'successful')
+                ->exists() ?? false;
+
+            if (! $hasSuccessfulPayment) {
+                throw new RuntimeException('Emergency Travel Certificate application must be paid before approval and issue.');
+            }
+
+            $lockedApplication->update([
                 'status' => VisaApplicationStatus::Approved,
                 'reviewed_by' => $issuer->id,
                 'approved_by' => $issuer->id,
@@ -49,12 +60,16 @@ class ApproveOnlineEvisaApplicationService
                 'last_status_changed_at' => now(),
             ]);
 
-            $permit = $this->generatePermitService->handle($application->fresh(['latestInvoice.payments']), $issuer);
+            $permit = $this->generatePermitService->handle($lockedApplication, $issuer);
 
-            $this->sendPermitEmailService->handle($permit->fresh(['visaApplication.passenger']));
-
-            return $permit->fresh(['visaApplication.passenger']);
+            return [$permit->fresh(['visaApplication.passenger']), true];
         });
+
+        if ($created) {
+            $this->sendPermitEmailService->handle($permit);
+        }
+
+        return $permit->fresh(['visaApplication.passenger']);
     }
 
     public static function canIssue(?User $user): bool

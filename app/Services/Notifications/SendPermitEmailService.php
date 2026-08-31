@@ -7,6 +7,7 @@ use App\Models\NotificationLog;
 use App\Models\Permit;
 use App\Support\Audit;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class SendPermitEmailService
 {
@@ -37,7 +38,29 @@ class SendPermitEmailService
             return $log;
         }
 
-        Mail::to($recipient)->send(new PermitIssuedMail($permit));
+        try {
+            Mail::to($recipient)->send(new PermitIssuedMail($permit));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $log->update([
+                'status' => 'failed',
+                'failed_at' => now(),
+                'failure_reason' => 'Certificate email delivery failed.',
+            ]);
+
+            Audit::log(
+                action: 'notification.email_failed',
+                description: 'Emergency Travel Certificate email delivery failed.',
+                auditable: $log,
+                metadata: [
+                    'permit_no' => $permit->permit_no,
+                    'recipient' => $recipient,
+                ]
+            );
+
+            return $log;
+        }
 
         $log->update([
             'status' => 'sent',

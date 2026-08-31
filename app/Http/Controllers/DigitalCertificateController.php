@@ -60,6 +60,7 @@ class DigitalCertificateController extends Controller
             PermitVerificationResult::Revoked => 'Revoked',
             PermitVerificationResult::Expired => 'Expired',
             PermitVerificationResult::Valid => 'Valid',
+            PermitVerificationResult::Invalid => 'Invalid',
             PermitVerificationResult::NotFound => 'Not Found',
         };
     }

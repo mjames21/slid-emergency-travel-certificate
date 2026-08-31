@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\StaffTitle;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,6 +28,7 @@ class AuthenticationTest extends TestCase
         config(['security.staff_email_domains' => ['immigration.gov.sl']]);
 
         $user = User::factory()->create();
+        $this->assignActiveTitle($user);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -35,6 +37,40 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_inactive_users_cannot_authenticate(): void
+    {
+        $user = User::factory()->create(['active' => false]);
+        $this->assignActiveTitle($user);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors(['email']);
+
+        $this->assertGuest();
+    }
+
+    public function test_users_without_an_active_staff_title_cannot_authenticate(): void
+    {
+        $user = User::factory()->create();
+        $title = StaffTitle::query()->create([
+            'name' => 'Inactive ETC Issuer',
+            'code' => 'etc_issuer',
+            'active' => false,
+        ]);
+        $user->staffTitles()->attach($title->id, [
+            'assigned_at' => now(),
+            'is_primary' => true,
+        ]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors(['email']);
+
+        $this->assertGuest();
     }
 
     public function test_users_with_non_staff_email_domains_cannot_authenticate(): void
@@ -120,5 +156,21 @@ class AuthenticationTest extends TestCase
                 'password' => 'wrong-password',
             ])
             ->assertStatus(429);
+    }
+
+    private function assignActiveTitle(User $user): void
+    {
+        $title = StaffTitle::query()->firstOrCreate(
+            ['code' => 'etc_issuer'],
+            [
+                'name' => 'ETC Issuer',
+                'active' => true,
+            ]
+        );
+
+        $user->staffTitles()->attach($title->id, [
+            'assigned_at' => now(),
+            'is_primary' => true,
+        ]);
     }
 }

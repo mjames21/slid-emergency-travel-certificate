@@ -23,7 +23,7 @@ class ProcessWangovPaymentWebhookService
     ): array {
         return DB::transaction(function () use ($reference, $status, $payload, $providerReference, $amount, $currency, $eventTime) {
             $invoice = Invoice::query()
-                ->with(['visaApplication', 'payments'])
+                ->with(['visaApplication.permit', 'payments'])
                 ->where('payment_reference', $reference)
                 ->lockForUpdate()
                 ->first();
@@ -56,11 +56,15 @@ class ProcessWangovPaymentWebhookService
                     'paid_at' => $eventTime ?: now(),
                 ]);
 
-                $invoice->visaApplication?->update([
-                    'status' => VisaApplicationStatus::Paid,
-                    'online_payment_returned_at' => $eventTime ?: now(),
-                    'last_status_changed_at' => now(),
-                ]);
+                $application = $invoice->visaApplication;
+
+                if ($application) {
+                    $application->update([
+                        'status' => $application->permit ? VisaApplicationStatus::PermitIssued : VisaApplicationStatus::Paid,
+                        'online_payment_returned_at' => $eventTime ?: now(),
+                        'last_status_changed_at' => now(),
+                    ]);
+                }
 
                 return [
                     'ok' => true,
@@ -84,10 +88,14 @@ class ProcessWangovPaymentWebhookService
                     'paid_at' => null,
                 ]);
 
-                $invoice->visaApplication?->update([
-                    'status' => VisaApplicationStatus::AwaitingPayment,
-                    'last_status_changed_at' => now(),
-                ]);
+                $application = $invoice->visaApplication;
+
+                if ($application) {
+                    $application->update([
+                        'status' => $application->permit ? VisaApplicationStatus::PermitIssued : VisaApplicationStatus::AwaitingPayment,
+                        'last_status_changed_at' => now(),
+                    ]);
+                }
 
                 return ['ok' => true, 'handled' => true, 'type' => 'visa_invoice', 'action' => 'reversed'];
             }
@@ -106,10 +114,14 @@ class ProcessWangovPaymentWebhookService
                     'status' => $status === 'expired' ? InvoiceStatus::Expired : InvoiceStatus::Failed,
                 ]);
 
-                $invoice->visaApplication?->update([
-                    'status' => VisaApplicationStatus::AwaitingPayment,
-                    'last_status_changed_at' => now(),
-                ]);
+                $application = $invoice->visaApplication;
+
+                if ($application) {
+                    $application->update([
+                        'status' => $application->permit ? VisaApplicationStatus::PermitIssued : VisaApplicationStatus::AwaitingPayment,
+                        'last_status_changed_at' => now(),
+                    ]);
+                }
 
                 return ['ok' => true, 'handled' => true, 'type' => 'visa_invoice', 'action' => 'failed'];
             }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PermitStatus;
 use App\Models\Country;
 use App\Models\Permit;
 use App\Models\PermitVerification;
@@ -80,6 +81,20 @@ class ProductionHardeningTest extends TestCase
 
         $this->assertStringContainsString("script-src 'self' 'unsafe-inline'", $contentSecurityPolicy);
         $this->assertStringContainsString("'unsafe-eval'", $contentSecurityPolicy);
+    }
+
+    #[Test]
+    public function office_application_returns_to_the_first_section_with_validation_errors(): void
+    {
+        $this->actingAsStaffUserWithTitle('etc_issuer', 'ETC Issuer');
+
+        $response = $this->from(route('etc.apply'))
+            ->followingRedirects()
+            ->post(route('etc.store'), []);
+
+        $response->assertOk()
+            ->assertSee('Please correct the highlighted fields.')
+            ->assertSee('const errorStep = 1;', false);
     }
 
     #[Test]
@@ -272,6 +287,37 @@ class ProductionHardeningTest extends TestCase
         ]);
 
         $this->assertSame(2, PermitVerification::query()->count());
+    }
+
+    #[Test]
+    public function public_verification_reports_cancelled_certificates_and_keeps_todays_certificate_valid(): void
+    {
+        $cancelled = Permit::factory()->create([
+            'verification_code' => 'SVV-CANCELLED-ETC',
+            'status' => PermitStatus::Cancelled,
+            'valid_until' => now()->addDay()->toDateString(),
+        ]);
+        $validToday = Permit::factory()->create([
+            'verification_code' => 'SVV-VALID-TODAY-ETC',
+            'status' => PermitStatus::Issued,
+            'valid_until' => today()->toDateString(),
+        ]);
+
+        $this->get(route('verify.permit', $cancelled->verification_code))
+            ->assertOk()
+            ->assertSee('Cancelled');
+        $this->get(route('verify.permit', $validToday->verification_code))
+            ->assertOk()
+            ->assertSee('Valid');
+
+        $this->assertDatabaseHas('permit_verifications', [
+            'permit_id' => $cancelled->id,
+            'result' => 'cancelled',
+        ]);
+        $this->assertDatabaseHas('permit_verifications', [
+            'permit_id' => $validToday->id,
+            'result' => 'valid',
+        ]);
     }
 
     private function actingAsStaffUserWithTitle(string $code, string $name): User

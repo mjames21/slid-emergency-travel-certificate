@@ -35,6 +35,7 @@ class OnlineEvisaLifecycleTest extends TestCase
 
         User::factory()->create();
         $hqOfficer = $this->staffUserWithTitle('etc_issuer', 'ETC Issuer');
+        $hqOfficer->update(['name' => "Alex O'Connor"]);
 
         $application = app(CreateOnlineEvisaApplicationService::class)->handle([
             'surname' => 'JAMES',
@@ -109,12 +110,76 @@ class OnlineEvisaLifecycleTest extends TestCase
         $this->assertStringContainsString('Security Features', $certificateHtml);
         $this->assertStringContainsString('QR Verification', $certificateHtml);
         $this->assertStringContainsString('Approval and Issue Officer', $certificateHtml);
-        $this->assertStringContainsString(strtoupper($hqOfficer->name), $certificateHtml);
+        $this->assertStringContainsString(e(strtoupper($hqOfficer->name)), $certificateHtml);
 
         Mail::assertSent(PermitIssuedMail::class, function (PermitIssuedMail $mail) {
             return $mail->hasTo('traveler@example.test')
                 && $mail->permit->permit_no !== null;
         });
+    }
+
+    #[Test]
+    public function repeated_issue_requests_return_the_existing_certificate_without_duplicate_email(): void
+    {
+        Mail::fake();
+
+        $issuer = $this->staffUserWithTitle('etc_issuer', 'ETC Issuer');
+        $application = $this->onlineApplication();
+        app(RecordOnlineEvisaPaymentService::class)->handle($application->fresh(['latestInvoice']));
+
+        $service = app(ApproveOnlineEvisaApplicationService::class);
+        $firstPermit = $service->handle($application, $issuer);
+        $secondPermit = $service->handle($application, $issuer);
+
+        $this->assertSame($firstPermit->id, $secondPermit->id);
+        $this->assertSame(1, Permit::query()->where('visa_application_id', $application->id)->count());
+        Mail::assertSentCount(1);
+    }
+
+    #[Test]
+    public function certificate_remains_issued_when_email_delivery_fails(): void
+    {
+        Mail::shouldReceive('to')
+            ->once()
+            ->andThrow(new RuntimeException('SMTP unavailable'));
+
+        $issuer = $this->staffUserWithTitle('etc_issuer', 'ETC Issuer');
+        $application = $this->onlineApplication();
+        app(RecordOnlineEvisaPaymentService::class)->handle($application->fresh(['latestInvoice']));
+
+        $permit = app(ApproveOnlineEvisaApplicationService::class)->handle($application, $issuer);
+
+        $this->assertNotNull($permit->id);
+        $this->assertSame('permit_issued', $application->fresh()->status->value);
+        $this->assertDatabaseHas('notification_logs', [
+            'permit_id' => $permit->id,
+            'status' => 'failed',
+            'failure_reason' => 'Certificate email delivery failed.',
+        ]);
+    }
+
+    #[Test]
+    public function reversed_payment_does_not_move_an_issued_certificate_back_to_awaiting_payment(): void
+    {
+        Mail::fake();
+
+        $issuer = $this->staffUserWithTitle('etc_issuer', 'ETC Issuer');
+        $application = $this->onlineApplication();
+        app(RecordOnlineEvisaPaymentService::class)->handle($application->fresh(['latestInvoice']));
+        app(ApproveOnlineEvisaApplicationService::class)->handle($application, $issuer);
+
+        $invoice = $application->fresh(['latestInvoice'])->latestInvoice;
+        $result = app(ProcessWangovPaymentWebhookService::class)->handle(
+            $invoice->payment_reference,
+            'reversed',
+            ['status' => 'reversed'],
+            'REVERSAL-001'
+        );
+
+        $this->assertSame('reversed', $result['action']);
+        $this->assertSame('failed', $invoice->fresh()->status->value);
+        $this->assertSame('permit_issued', $application->fresh()->status->value);
+        $this->assertNotNull($application->fresh()->permit);
     }
 
     #[Test]

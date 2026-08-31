@@ -47,11 +47,15 @@ class FortifyServiceProvider extends ServiceProvider
 
             $user = User::query()->where('email', $email)->first();
 
-            if ($user && Hash::check((string) $request->input('password'), $user->password)) {
-                return $user;
+            if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) {
+                return null;
             }
 
-            return null;
+            if (! $user->isActive() || ! $user->staffTitles()->where('staff_titles.active', true)->exists()) {
+                return null;
+            }
+
+            return $user;
         });
 
         RateLimiter::for('login', function (Request $request) {

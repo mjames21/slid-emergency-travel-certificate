@@ -7,11 +7,11 @@
     </div>
 
     @if ($message)
-        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ $message }}</div>
+        <div role="status" class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ $message }}</div>
     @endif
 
     @if ($error)
-        <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $error }}</div>
+        <div role="alert" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $error }}</div>
     @endif
 
     <div class="grid gap-4 md:grid-cols-3">
@@ -105,12 +105,12 @@
     <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div class="grid gap-4 md:grid-cols-3">
             <div class="md:col-span-2">
-                <label class="text-sm font-medium text-gray-700">Search</label>
-                <input wire:model.live.debounce.300ms="search" type="search" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" placeholder="Tracking code, request, receipt, passport, traveler">
+                <label for="applicationSearch" class="text-sm font-medium text-gray-700">Search</label>
+                <input id="applicationSearch" wire:model.live.debounce.300ms="search" type="search" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" placeholder="Tracking code, request, receipt, passport, traveler">
             </div>
             <div>
-                <label class="text-sm font-medium text-gray-700">Status</label>
-                <select wire:model.live="status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                <label for="applicationStatus" class="text-sm font-medium text-gray-700">Status</label>
+                <select id="applicationStatus" wire:model.live="status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                     <option value="">All</option>
                     <option value="awaiting_payment">Awaiting payment</option>
                     <option value="paid">Paid</option>
@@ -154,11 +154,11 @@
                             </td>
                             <td class="px-4 py-3 text-gray-700">{{ $application->arrival_date?->format('Y-m-d') ?: '—' }}</td>
                             <td class="px-4 py-3 text-gray-700">
-                                <div>{{ strtoupper($application->latestInvoice?->status?->value ?? '—') }}</div>
+                                <div>{{ str($application->latestInvoice?->status?->value ?? '—')->replace('_', ' ')->title() }}</div>
                                 <div class="text-xs text-gray-500">{{ $receiptDisplay ?: 'No receipt' }}</div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">{{ strtoupper($application->status->value) }}</span>
+                                <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">{{ str($application->status->value)->replace('_', ' ')->title() }}</span>
                             </td>
                             <td class="px-4 py-3 text-gray-700">
                                 @if ($application->permit)
@@ -176,8 +176,16 @@
                             </td>
                             <td class="px-4 py-3">
                                 @if ($canIssueEtc && $application->status->value === 'paid' && ! $application->permit)
-                                    <button wire:click="issue({{ $application->id }})" type="button" class="rounded-md bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800">
-                                        Generate Certificate
+                                    <button
+                                        wire:key="issue-application-{{ $application->id }}"
+                                        wire:click="issue({{ $application->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="issue({{ $application->id }})"
+                                        type="button"
+                                        class="rounded-md bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        <span wire:loading.remove wire:target="issue({{ $application->id }})">Generate Certificate</span>
+                                        <span wire:loading wire:target="issue({{ $application->id }})">Generating...</span>
                                     </button>
                                 @else
                                     <span class="text-xs text-gray-400">No action</span>

@@ -98,12 +98,16 @@ class User extends Authenticatable implements PasskeyUser
 
     public function hasStaffTitle(string $code): bool
     {
-        return $this->staffTitles->contains(fn (StaffTitle $title) => $title->code === $code);
+        return $this->staffTitles->contains(
+            fn (StaffTitle $title) => $title->active && $title->code === $code
+        );
     }
 
     public function hasAnyStaffTitle(array $codes): bool
     {
-        return $this->staffTitles->contains(fn (StaffTitle $title) => in_array($title->code, $codes, true));
+        return $this->staffTitles->contains(
+            fn (StaffTitle $title) => $title->active && in_array($title->code, $codes, true)
+        );
     }
 
     public function isActive(): bool

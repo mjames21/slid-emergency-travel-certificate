@@ -87,6 +87,36 @@ class AdminEtcUserProvisioningTest extends TestCase
     }
 
     #[Test]
+    public function system_administrator_receives_one_time_login_details_after_creating_user(): void
+    {
+        config(['security.staff_email_domains' => ['immigration.gov.sl']]);
+
+        $systemAdmin = $this->staffUserWithTitle('system_administrator', 'System Administrator');
+        $this->staffTitle('etc_issuer', 'ETC Issuer');
+
+        $this->actingAs($systemAdmin);
+
+        Livewire::test(UsersIndex::class)
+            ->set('name', 'ETC Issuer One')
+            ->set('email', 'etc.issuer@immigration.gov.sl')
+            ->set('staffNumber', 'ETC-001')
+            ->set('titleCode', 'etc_issuer')
+            ->set('password', 'StrongPassword123!')
+            ->call('createUser')
+            ->assertSet('showLoginDetails', true)
+            ->assertSet('loginDetails.email', 'etc.issuer@immigration.gov.sl')
+            ->assertSet('loginDetails.role', 'ETC Issuer')
+            ->assertSet('loginDetails.password', 'StrongPassword123!')
+            ->assertSee('Share Staff Login Details')
+            ->assertSee('StrongPassword123!')
+            ->assertSee(route('login'))
+            ->call('closeLoginDetails')
+            ->assertSet('showLoginDetails', false)
+            ->assertSet('loginDetails', [])
+            ->assertDontSee('StrongPassword123!');
+    }
+
+    #[Test]
     public function non_system_administrator_cannot_access_etc_user_provisioning(): void
     {
         $this->staffTitle('system_administrator', 'System Administrator');

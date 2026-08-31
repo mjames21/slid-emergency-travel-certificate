@@ -1,29 +1,30 @@
 # Sierra Leone Immigration Department Emergency Travel Certificate
 
-This repository is the public Emergency Travel Certificate (ETC) platform for Sierra Leone Immigration Department.
+This repository is the staff-operated Emergency Travel Certificate (ETC) platform for Sierra Leone Immigration Department.
 
-It was extracted from the combined permit/ETC platform so ETC can run as a separate public online service while landing permit / visa-on-arrival operations remain a staff-only system.
+ETC applications are entered in the office by an authorized issuer. Applicants do not apply publicly. The platform runs separately from landing permit / visa-on-arrival operations.
 
 ## Scope
 
 In scope:
 
-- Public no-account ETC application.
+- Staff-only ETC intake for office applicants.
 - Passport biodata upload and MRZ/OCR assistance.
 - Manual correction when passport image quality is poor.
 - Applicant, guardian, contact, destination, history, security declaration, and certification fields.
-- WanGov/GovPay-only ETC payment.
-- Public status tracking by secure token.
-- HQ review of paid ETC applications.
-- Email notification and certificate verification.
+- Receipt-number payment recording, with optional WanGov/GovPay integration.
+- Staff-only application status tracking.
+- Approval and issuance of paid ETC applications by the ETC issuer.
+- Digital certificates, MRZ, email notification, and QR links to public verification.
+- System administrator provisioning of issuer and executive accounts.
+- Installable PWA; no Tauri or kiosk mode.
 - Security headers, rate limits, private uploads, audit records, and staff MFA for HQ access.
 
 Out of scope:
 
 - Airport landing permit / visa-on-arrival officer intake.
-- NRA receipt upload for permit payment.
 - Permit extension, border movement, and airport permit reports.
-- Native desktop/PWA shell for officer permit operations.
+- Public applicant intake and native desktop or kiosk shells.
 
 Those remain in `slid-visa-on-arrival`.
 
@@ -31,12 +32,13 @@ Those remain in `slid-visa-on-arrival`.
 
 | Area | URL |
 | --- | --- |
-| Public ETC application | `/emergency-travel-certificate/apply` |
-| Public ETC status | `/emergency-travel-certificate/status/{token}` |
-| Legacy public redirect | `/evisa/apply` |
+| Office ETC application | `/emergency-travel-certificate/apply` |
+| Staff ETC status | `/emergency-travel-certificate/status/{token}` |
 | HQ ETC review | `/hq/emergency-travel-certificates` |
+| Staff user management | `/admin/staff/users` |
 | Staff sign in | `/login` |
 | Certificate verification | `/verify/{code}` |
+| Digital certificate | `/digital/etc/{code}` |
 
 ## Local Setup
 
@@ -63,6 +65,8 @@ php artisan db:seed
 
 The staff account seeder creates or repairs the System Administrator, ETC Issuer, and Executive Observer accounts. In production, set `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` before the first seed. Remove or blank those password variables after bootstrap unless you intentionally want a later `db:seed --force` to rotate that account password.
 
+Default seed emails are `admin@immigration.gov.sl`, `etc.issuer@immigration.gov.sl`, and `executive@immigration.gov.sl`. The local-development default password is `ChangeMe123!`; production must keep `SEED_ALLOW_DEFAULT_PASSWORDS=false` and use unique strong passwords. Existing passwords are preserved when their seed password variables are blank.
+
 Build frontend assets:
 
 ```bash
@@ -85,8 +89,7 @@ Production must set:
 - `APP_DEBUG=false`
 - `APP_URL=https://etc.slid.datahub.gov.sl` for the deployed ETC domain.
 - `APP_KEY` to a generated production key.
-- `WANGOV_ENABLED=true`
-- `WANGOV_SERVICE_KEY`, `WANGOV_BEARER_TOKEN`, and `WANGOV_WEBHOOK_SECRET`.
+- `WANGOV_ENABLED=false` for receipt-only operations. When enabling the integration, configure `WANGOV_SERVICE_KEY`, `WANGOV_BEARER_TOKEN`, `WANGOV_WEBHOOK_SECRET`, and the approved HTTPS provider URL and checkout hosts.
 - `SECURITY_STAFF_MFA_REQUIRED=true`
 - `SEED_SYSTEM_ADMIN_PASSWORD`, `SEED_ETC_ISSUER_PASSWORD`, and `SEED_EXECUTIVE_PASSWORD` for first-time staff account bootstrap.
 - Secure encrypted session cookies with `SESSION_DOMAIN=null` for a host-only login cookie.
@@ -97,7 +100,7 @@ Do not copy secrets from the permit operations project.
 
 ## Security Position
 
-ETC is public-facing, so it must remain internet accessible. The public surface is limited to application, status, payment, and verification routes. HQ review remains staff-only and requires authenticated, active staff with confirmed MFA.
+The public surface is limited to staff authentication, token-protected certificate verification/digital certificates, and authenticated provider webhooks. Intake, application status, receipt recording, and HQ review require authenticated, active staff with confirmed MFA and the appropriate role.
 
 Before production:
 

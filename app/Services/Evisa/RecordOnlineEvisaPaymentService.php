@@ -4,6 +4,7 @@ namespace App\Services\Evisa;
 
 use App\Enums\PaymentStatus;
 use App\Enums\VisaApplicationStatus;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\VisaApplication;
 use Illuminate\Support\Facades\DB;
@@ -14,10 +15,21 @@ class RecordOnlineEvisaPaymentService
     public function handle(VisaApplication $application, array $payload = []): Payment
     {
         return DB::transaction(function () use ($application, $payload) {
-            $invoice = $application->latestInvoice;
+            $lockedApplication = VisaApplication::query()
+                ->with('permit')
+                ->lockForUpdate()
+                ->findOrFail($application->id);
+            $invoiceId = $lockedApplication->latestInvoice()->value('id');
+            $invoice = $invoiceId
+                ? Invoice::query()->lockForUpdate()->find($invoiceId)
+                : null;
 
             if (! $invoice) {
                 throw new \RuntimeException('No invoice is available for this Emergency Travel Certificate application.');
+            }
+
+            if ($lockedApplication->permit) {
+                throw new \RuntimeException('Payment cannot be changed after the Emergency Travel Certificate has been issued.');
             }
 
             $existing = $invoice->payments()
@@ -52,7 +64,7 @@ class RecordOnlineEvisaPaymentService
                 'paid_at' => now(),
             ]);
 
-            $application->update([
+            $lockedApplication->update([
                 'status' => VisaApplicationStatus::Paid,
                 'online_payment_returned_at' => now(),
                 'last_status_changed_at' => now(),

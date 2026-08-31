@@ -12,7 +12,10 @@ class EnsureStaffAccess
     {
         $user = $request->user();
 
-        abort_unless($user && $user->staffTitles()->exists(), 403);
+        abort_unless(
+            $user && $user->staffTitles()->where('staff_titles.active', true)->exists(),
+            403
+        );
 
         return $next($request);
     }

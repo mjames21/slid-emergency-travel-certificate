@@ -22,7 +22,7 @@ class VerifyPermitService
             $result = match (true) {
                 $permit->status === PermitStatus::Cancelled => PermitVerificationResult::Cancelled,
                 $permit->status === PermitStatus::Revoked => PermitVerificationResult::Revoked,
-                $permit->valid_until && $permit->valid_until->isPast() => PermitVerificationResult::Expired,
+                $permit->valid_until && $permit->valid_until->endOfDay()->isPast() => PermitVerificationResult::Expired,
                 default => PermitVerificationResult::Valid,
             };
         }

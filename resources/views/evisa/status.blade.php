@@ -23,7 +23,7 @@
                     <h1 class="text-3xl font-bold tracking-tight">Emergency Travel Certificate Status</h1>
                     <p class="mt-2 text-sm text-gray-600">{{ $application->public_tracking_code }}</p>
                 </div>
-                <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold uppercase text-gray-700">{{ $application->status->value }}</span>
+                <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">{{ str($application->status->value)->replace('_', ' ')->title() }}</span>
             </div>
 
             <div class="mt-6 grid gap-4 md:grid-cols-2">
@@ -49,7 +49,6 @@
                     <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
                         Payment not recorded. Use the payment reference {{ $invoice->payment_reference }} and record the WanGov/GovPay receipt number on the HQ request screen.
                     </div>
-                    <a href="{{ route('hq.emergency-travel-certificates.index') }}" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Back to ETC Requests</a>
                 @elseif (! $application->permit)
                     <div class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
                         Payment received. Pending ETC Issuer approval and issue.
@@ -57,9 +56,14 @@
                 @endif
 
                 @if ($application->permit)
+                    @can('print', $application->permit)
+                        <a href="{{ route('documents.certificates.show', $application->permit) }}" class="rounded-md border border-gray-300 px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">Print Official ETC</a>
+                    @endcan
                     <a href="{{ route('verify.permit', $application->permit->verification_code) }}" class="rounded-md border border-gray-300 px-5 py-3 text-sm font-bold text-gray-800">Verify Issued Certificate</a>
                     <a href="{{ route('digital.certificates.show', $application->permit->verification_code) }}" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Open Digital ETC</a>
                 @endif
+
+                <a href="{{ route('hq.emergency-travel-certificates.index') }}" class="rounded-md border border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50">Back to ETC Requests</a>
             </div>
 
             <div class="mt-8 border-t border-gray-200 pt-5 text-sm leading-7 text-gray-600">

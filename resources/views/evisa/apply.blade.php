@@ -42,7 +42,9 @@
 
         $errorStep = 1;
 
-        if ($errors->hasAny($stepTwoFields)) {
+        if ($errors->hasAny($stepOneFields)) {
+            $errorStep = 1;
+        } elseif ($errors->hasAny($stepTwoFields)) {
             $errorStep = 2;
         } elseif ($errors->hasAny($stepThreeFields)) {
             $errorStep = 3;
@@ -119,7 +121,7 @@
                         <input type="hidden" name="arrival_date" value="{{ old('arrival_date', now()->toDateString()) }}">
 
                         @if (isset($errors) && $errors->any())
-                            <div data-validation-summary class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                            <div data-validation-summary role="alert" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                                 <div class="font-bold">Please correct the highlighted fields.</div>
                                 <ul class="mt-2 list-disc space-y-1 pl-5">
                                     @foreach ($errors->getMessages() as $field => $messages)
@@ -131,6 +133,8 @@
                             </div>
                         @endif
 
+                        <div data-submission-error role="alert" class="hidden rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800"></div>
+
                         <section data-step="1" class="space-y-4">
                             <div class="border-b border-gray-200 pb-2">
                                 <div class="text-xs font-bold uppercase tracking-wide text-emerald-700">Step 1 of 5</div>
@@ -140,8 +144,8 @@
 
                             <div class="grid gap-3 md:grid-cols-2">
                                 <div class="rounded-md border border-gray-200 bg-white p-3">
-                                    <label class="text-sm font-bold text-gray-900">Traveler Type <span class="text-red-600">*</span></label>
-                                    <div class="mt-2 grid grid-cols-2 gap-2">
+                                    <div id="applicant-category-label" class="text-sm font-bold text-gray-900">Traveler Type <span class="text-red-600">*</span></div>
+                                    <div class="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="applicant-category-label">
                                         <label class="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold">
                                             <input type="radio" name="applicant_category" value="adult" @checked(old('applicant_category', 'adult') === 'adult') class="text-emerald-700 focus:ring-emerald-600">
                                             Adult
@@ -155,8 +159,8 @@
                                 </div>
 
                                 <div class="rounded-md border border-gray-200 bg-white p-3">
-                                    <label class="text-sm font-bold text-gray-900">Regional Category <span class="text-red-600">*</span></label>
-                                    <div class="mt-2 grid grid-cols-2 gap-2">
+                                    <div id="regional-category-label" class="text-sm font-bold text-gray-900">Regional Category <span class="text-red-600">*</span></div>
+                                    <div class="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="regional-category-label">
                                         <label class="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold">
                                             <input type="radio" name="regional_category" value="ecowas" @checked(old('regional_category') === 'ecowas') class="text-emerald-700 focus:ring-emerald-600">
                                             ECOWAS
@@ -173,8 +177,8 @@
                             <div class="rounded-md border border-emerald-200 bg-emerald-50 p-3">
                                 <div class="grid gap-3 md:grid-cols-2">
                                     <div>
-                                        <label class="text-sm font-bold text-gray-900">Identity Document Type <span class="text-red-600">*</span></label>
-                                        <select name="identity_document_type" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="identity_document_type" class="text-sm font-bold text-gray-900">Identity Document Type <span class="text-red-600">*</span></label>
+                                        <select id="identity_document_type" name="identity_document_type" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                             <option value="passport" @selected(old('identity_document_type', 'passport') === 'passport')>Passport</option>
                                             <option value="nin" @selected(old('identity_document_type') === 'nin')>National Identification Number</option>
                                             <option value="other" @selected(old('identity_document_type') === 'other')>Other supporting identity document</option>
@@ -183,15 +187,15 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-bold text-gray-900">Passport / NIN evidence <span class="text-red-600">*</span></label>
-                                        <input id="passport_biodata_image" name="passport_biodata_image" type="file" accept="image/*" data-compress-image data-compress-label="Passport / NIN evidence" data-compress-status="#passport_biodata_image_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <label for="passport_biodata_image" class="text-sm font-bold text-gray-900">Passport / NIN evidence <span class="text-red-600">*</span></label>
+                                        <input id="passport_biodata_image" name="passport_biodata_image" type="file" accept="image/jpeg,image/png,image/webp" data-compress-image data-compress-label="Passport / NIN evidence" data-compress-status="#passport_biodata_image_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
                                         <div id="passport_biodata_image_status" class="mt-1 text-xs text-gray-500">Images over 2 MB are compressed before upload.</div>
                                         @error('passport_biodata_image') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-bold text-gray-900">Traveler Photo <span class="text-red-600">*</span></label>
-                                        <input name="applicant_photo" type="file" accept="image/*" data-compress-image data-compress-label="Traveler photo" data-compress-status="#applicant_photo_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
+                                        <label for="applicant_photo" class="text-sm font-bold text-gray-900">Traveler Photo <span class="text-red-600">*</span></label>
+                                        <input id="applicant_photo" name="applicant_photo" type="file" accept="image/jpeg,image/png,image/webp" data-compress-image data-compress-label="Traveler photo" data-compress-status="#applicant_photo_status" class="mt-1 block w-full rounded-md border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white">
                                         <div id="applicant_photo_status" class="mt-1 text-xs text-gray-500">Images over 2 MB are compressed before upload.</div>
                                         @error('applicant_photo') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
@@ -239,19 +243,19 @@
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Surname <span class="text-red-600">*</span></label>
-                                        <input name="surname" value="{{ old('surname') }}" placeholder="Surname" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="surname" class="text-sm font-semibold text-gray-700">Surname <span class="text-red-600">*</span></label>
+                                        <input id="surname" name="surname" value="{{ old('surname') }}" autocomplete="family-name" placeholder="Surname" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('surname') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Given Names <span class="text-red-600">*</span></label>
-                                        <input name="given_names" value="{{ old('given_names') }}" placeholder="Given names" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="given_names" class="text-sm font-semibold text-gray-700">Given Names <span class="text-red-600">*</span></label>
+                                        <input id="given_names" name="given_names" value="{{ old('given_names') }}" autocomplete="given-name" placeholder="Given names" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('given_names') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Nationality <span class="text-red-600">*</span></label>
+                                        <label for="nationality_select" class="text-sm font-semibold text-gray-700">Nationality <span class="text-red-600">*</span></label>
                                         <select id="nationality_select" name="nationality" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                             <option value="">Select nationality</option>
                                             @foreach ($nationalities as $nationality)
@@ -264,20 +268,20 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Nationality Code</label>
+                                        <label for="nationality_code" class="text-sm font-semibold text-gray-700">Nationality Code</label>
                                         <input id="nationality_code" name="nationality_code" value="{{ old('nationality_code') }}" readonly placeholder="Auto-filled from nationality" class="mt-1 w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('nationality_code') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Passport / NIN No. <span class="text-red-600">*</span></label>
-                                        <input name="passport_number" value="{{ old('passport_number') }}" placeholder="Passport or NIN number" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="passport_number" class="text-sm font-semibold text-gray-700">Passport / NIN No. <span class="text-red-600">*</span></label>
+                                        <input id="passport_number" name="passport_number" value="{{ old('passport_number') }}" autocomplete="off" placeholder="Passport or NIN number" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('passport_number') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Sex</label>
-                                        <select name="sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="sex" class="text-sm font-semibold text-gray-700">Sex</label>
+                                        <select id="sex" name="sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                             <option value="">Select sex</option>
                                             <option value="M" @selected(old('sex') === 'M')>Male</option>
                                             <option value="F" @selected(old('sex') === 'F')>Female</option>
@@ -288,9 +292,9 @@
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Date of Birth <span class="text-red-600">*</span></label>
                                         <div class="mt-1 grid grid-cols-3 gap-2">
-                                            <input name="date_of_birth_year" value="{{ old('date_of_birth_year') }}" inputmode="numeric" maxlength="4" placeholder="YYYY" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
-                                            <input name="date_of_birth_month" value="{{ old('date_of_birth_month') }}" inputmode="numeric" maxlength="2" placeholder="MM" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
-                                            <input name="date_of_birth_day" value="{{ old('date_of_birth_day') }}" inputmode="numeric" maxlength="2" placeholder="DD" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="date_of_birth_year" value="{{ old('date_of_birth_year') }}" inputmode="numeric" maxlength="4" placeholder="YYYY" aria-label="Birth year" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="date_of_birth_month" value="{{ old('date_of_birth_month') }}" inputmode="numeric" maxlength="2" placeholder="MM" aria-label="Birth month" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="date_of_birth_day" value="{{ old('date_of_birth_day') }}" inputmode="numeric" maxlength="2" placeholder="DD" aria-label="Birth day" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         </div>
                                         @error('date_of_birth_year') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
@@ -298,28 +302,28 @@
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">Passport Expiry Date, if available</label>
                                         <div class="mt-1 grid grid-cols-3 gap-2">
-                                            <input name="passport_expiry_year" value="{{ old('passport_expiry_year') }}" inputmode="numeric" maxlength="4" placeholder="YYYY" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
-                                            <input name="passport_expiry_month" value="{{ old('passport_expiry_month') }}" inputmode="numeric" maxlength="2" placeholder="MM" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
-                                            <input name="passport_expiry_day" value="{{ old('passport_expiry_day') }}" inputmode="numeric" maxlength="2" placeholder="DD" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="passport_expiry_year" value="{{ old('passport_expiry_year') }}" inputmode="numeric" maxlength="4" placeholder="YYYY" aria-label="Passport expiry year" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="passport_expiry_month" value="{{ old('passport_expiry_month') }}" inputmode="numeric" maxlength="2" placeholder="MM" aria-label="Passport expiry month" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                            <input name="passport_expiry_day" value="{{ old('passport_expiry_day') }}" inputmode="numeric" maxlength="2" placeholder="DD" aria-label="Passport expiry day" class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         </div>
                                         @error('passport_expiry_year') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Place of Birth <span class="text-red-600">*</span></label>
-                                        <input name="place_of_birth" value="{{ old('place_of_birth') }}" placeholder="Town, city, or district" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="place_of_birth" class="text-sm font-semibold text-gray-700">Place of Birth <span class="text-red-600">*</span></label>
+                                        <input id="place_of_birth" name="place_of_birth" value="{{ old('place_of_birth') }}" placeholder="Town, city, or district" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('place_of_birth') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Country of Birth</label>
-                                        <input name="country_of_birth" value="{{ old('country_of_birth') }}" type="text" list="country-list" placeholder="Search country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="country_of_birth" class="text-sm font-semibold text-gray-700">Country of Birth</label>
+                                        <input id="country_of_birth" name="country_of_birth" value="{{ old('country_of_birth') }}" type="text" list="country-list" placeholder="Search country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('country_of_birth') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Marital Status</label>
-                                        <select name="marital_status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="marital_status" class="text-sm font-semibold text-gray-700">Marital Status</label>
+                                        <select id="marital_status" name="marital_status" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                             <option value="">Select status</option>
                                             @foreach (['single' => 'Single', 'married' => 'Married', 'divorced' => 'Divorced', 'widowed' => 'Widowed', 'separated' => 'Separated', 'other' => 'Other'] as $value => $label)
                                                 <option value="{{ $value }}" @selected(old('marital_status') === $value)>{{ $label }}</option>
@@ -352,32 +356,32 @@
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div class="md:col-span-2">
-                                        <label class="text-sm font-semibold text-gray-700">Address <span class="text-red-600">*</span></label>
-                                        <textarea name="applicant_address" rows="2" placeholder="Current address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('applicant_address') }}</textarea>
+                                        <label for="applicant_address" class="text-sm font-semibold text-gray-700">Address <span class="text-red-600">*</span></label>
+                                        <textarea id="applicant_address" name="applicant_address" rows="2" autocomplete="street-address" placeholder="Current address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('applicant_address') }}</textarea>
                                         @error('applicant_address') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Occupation <span class="text-red-600">*</span></label>
-                                        <input name="occupation" value="{{ old('occupation') }}" placeholder="Occupation" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="occupation" class="text-sm font-semibold text-gray-700">Occupation <span class="text-red-600">*</span></label>
+                                        <input id="occupation" name="occupation" value="{{ old('occupation') }}" autocomplete="organization-title" placeholder="Occupation" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('occupation') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Phone Number <span class="text-red-600">*</span></label>
-                                        <input name="phone" value="{{ old('phone') }}" placeholder="Phone number" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="phone" class="text-sm font-semibold text-gray-700">Phone Number <span class="text-red-600">*</span></label>
+                                        <input id="phone" name="phone" value="{{ old('phone') }}" type="tel" autocomplete="tel" placeholder="Phone number" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('phone') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Email for Decision Notice <span class="text-red-600">*</span></label>
-                                        <input name="email" value="{{ old('email') }}" type="email" placeholder="Certificate decision will be sent here" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="email" class="text-sm font-semibold text-gray-700">Email for Decision Notice <span class="text-red-600">*</span></label>
+                                        <input id="email" name="email" value="{{ old('email') }}" type="email" autocomplete="email" placeholder="Certificate decision will be sent here" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('email') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Country of Residence</label>
-                                        <input name="country_of_residence" value="{{ old('country_of_residence') }}" type="text" list="country-list" placeholder="Search country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="country_of_residence" class="text-sm font-semibold text-gray-700">Country of Residence</label>
+                                        <input id="country_of_residence" name="country_of_residence" value="{{ old('country_of_residence') }}" type="text" list="country-list" autocomplete="country-name" placeholder="Search country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('country_of_residence') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
                                 </div>
@@ -394,32 +398,32 @@
 
                                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Name</label>
-                                        <input data-guardian-field name="guardian_name" value="{{ old('guardian_name') }}" placeholder="Parent or guardian name" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
+                                        <label for="guardian_name" class="text-sm font-semibold text-gray-700">Name</label>
+                                        <input id="guardian_name" data-guardian-field name="guardian_name" value="{{ old('guardian_name') }}" placeholder="Parent or guardian name" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_name') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Relationship to Traveler</label>
-                                        <input data-guardian-field name="guardian_relationship" value="{{ old('guardian_relationship') }}" placeholder="Father, mother, guardian" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
+                                        <label for="guardian_relationship" class="text-sm font-semibold text-gray-700">Relationship to Traveler</label>
+                                        <input id="guardian_relationship" data-guardian-field name="guardian_relationship" value="{{ old('guardian_relationship') }}" placeholder="Father, mother, guardian" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_relationship') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="text-sm font-semibold text-gray-700">Address</label>
-                                        <textarea data-guardian-field name="guardian_address" rows="2" placeholder="Guardian address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>{{ old('guardian_address') }}</textarea>
+                                        <label for="guardian_address" class="text-sm font-semibold text-gray-700">Address</label>
+                                        <textarea id="guardian_address" data-guardian-field name="guardian_address" rows="2" placeholder="Guardian address" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>{{ old('guardian_address') }}</textarea>
                                         @error('guardian_address') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Telephone</label>
-                                        <input data-guardian-field name="guardian_phone" value="{{ old('guardian_phone') }}" placeholder="Guardian telephone" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
+                                        <label for="guardian_phone" class="text-sm font-semibold text-gray-700">Telephone</label>
+                                        <input id="guardian_phone" data-guardian-field name="guardian_phone" value="{{ old('guardian_phone') }}" type="tel" placeholder="Guardian telephone" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                         @error('guardian_phone') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Sex</label>
-                                        <select data-guardian-field name="guardian_sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
+                                        <label for="guardian_sex" class="text-sm font-semibold text-gray-700">Sex</label>
+                                        <select id="guardian_sex" data-guardian-field name="guardian_sex" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600" @disabled(old('applicant_category', 'adult') !== 'child')>
                                             <option value="">Select</option>
                                             <option value="M" @selected(old('guardian_sex') === 'M')>Male</option>
                                             <option value="F" @selected(old('guardian_sex') === 'F')>Female</option>
@@ -445,14 +449,14 @@
                             <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Destination <span class="text-red-600">*</span></label>
-                                        <input name="destination_country" value="{{ old('destination_country') }}" type="text" list="country-list" placeholder="Destination country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="destination_country" class="text-sm font-semibold text-gray-700">Destination <span class="text-red-600">*</span></label>
+                                        <input id="destination_country" name="destination_country" value="{{ old('destination_country') }}" type="text" list="country-list" placeholder="Destination country" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         @error('destination_country') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Carrier / Transport, if known</label>
-                                        <input name="flight_carrier" value="{{ old('flight_carrier') }}" type="text" list="etc-flight-carrier-list" placeholder="Airline, bus operator, vessel, or vehicle" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="flight_carrier" class="text-sm font-semibold text-gray-700">Carrier / Transport, if known</label>
+                                        <input id="flight_carrier" name="flight_carrier" value="{{ old('flight_carrier') }}" type="text" list="etc-flight-carrier-list" placeholder="Airline, bus operator, vessel, or vehicle" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         <datalist id="etc-flight-carrier-list">
                                             @foreach ($flightCarriers as $carrier)
                                                 <option value="{{ $carrier['name'] }}">{{ $carrier['code'] ?? '' }}</option>
@@ -461,14 +465,14 @@
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="text-sm font-semibold text-gray-700">Destination Address or Contact, if known</label>
-                                        <textarea name="destination_address" rows="2" placeholder="Address, contact, or location overseas" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('destination_address') }}</textarea>
+                                        <label for="destination_address" class="text-sm font-semibold text-gray-700">Destination Address or Contact, if known</label>
+                                        <textarea id="destination_address" name="destination_address" rows="2" placeholder="Address, contact, or location overseas" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('destination_address') }}</textarea>
                                         @error('destination_address') <div class="mt-1 text-xs text-red-600">{{ $message }}</div> @enderror
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="text-sm font-semibold text-gray-700">Purpose of Traveling <span class="text-red-600">*</span></label>
-                                        <input name="purpose_of_visit" value="{{ old('purpose_of_visit') }}" type="text" list="purpose-list" placeholder="Medical, return home, family emergency, lost passport, official travel" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="purpose_of_visit" class="text-sm font-semibold text-gray-700">Purpose of Traveling <span class="text-red-600">*</span></label>
+                                        <input id="purpose_of_visit" name="purpose_of_visit" value="{{ old('purpose_of_visit') }}" type="text" list="purpose-list" placeholder="Medical, return home, family emergency, lost passport, official travel" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                         <datalist id="purpose-list">
                                             @foreach ($etcPurposeOptions as $purpose)
                                                 <option value="{{ $purpose }}"></option>
@@ -478,18 +482,18 @@
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Reference, if known</label>
-                                        <input name="flight_number" value="{{ old('flight_number') }}" placeholder="Flight, vehicle plate, ticket, or border reference" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="flight_number" class="text-sm font-semibold text-gray-700">Reference, if known</label>
+                                        <input id="flight_number" name="flight_number" value="{{ old('flight_number') }}" placeholder="Flight, vehicle plate, ticket, or border reference" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                     </div>
 
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700">Route Details</label>
-                                        <input name="flight_details" value="{{ old('flight_details') }}" placeholder="Example: Freetown to Conakry by road via Gbalamuya" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
+                                        <label for="flight_details" class="text-sm font-semibold text-gray-700">Route Details</label>
+                                        <input id="flight_details" name="flight_details" value="{{ old('flight_details') }}" placeholder="Example: Freetown to Conakry by road via Gbalamuya" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="text-sm font-semibold text-gray-700">Additional Remarks</label>
-                                        <textarea name="remarks" rows="2" placeholder="Additional information for immigration review" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('remarks') }}</textarea>
+                                        <label for="remarks" class="text-sm font-semibold text-gray-700">Additional Remarks</label>
+                                        <textarea id="remarks" name="remarks" rows="2" placeholder="Additional information for immigration review" class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-600 focus:ring-emerald-600">{{ old('remarks') }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -546,7 +550,7 @@
 
                             <div class="flex justify-between border-t border-gray-200 pt-4">
                                 <button type="button" data-next-step="4" class="rounded-md border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700">Back</button>
-                                <button type="submit" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Submit office entry and continue to payment</button>
+                                <button type="submit" class="rounded-md bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60">Submit office entry and continue to payment</button>
                             </div>
                         </section>
                     </form>
@@ -568,13 +572,15 @@
             const draftStatus = document.getElementById('draft-status');
             const clearDraftButton = document.getElementById('clear-draft-button');
             const validationSummary = document.querySelector('[data-validation-summary]');
+            const submissionError = document.querySelector('[data-submission-error]');
             const applicantCategoryInputs = Array.from(form.querySelectorAll('[name="applicant_category"]'));
             const guardianSection = document.getElementById('guardian-section');
             const guardianFields = Array.from(guardianSection?.querySelectorAll('[data-guardian-field]') || []);
             const imageCompressionInputs = Array.from(form.querySelectorAll('[data-compress-image]'));
             const hasErrors = @json($errors->any());
             const errorStep = @json($errorStep);
-            const draftKey = 'slid:etc:application:draft:v2';
+            const draftKey = 'slid:etc:application:draft:v3';
+            const draftTtlMs = 30 * 60 * 1000;
             const maxCompressedImageSize = 2 * 1024 * 1024;
             const compressionJobs = new Set();
             const compressedImageFiles = new WeakMap();
@@ -582,7 +588,7 @@
 
             const draftStorage = () => {
                 try {
-                    return window.localStorage || null;
+                    return window.sessionStorage || null;
                 } catch (_) {
                     return null;
                 }
@@ -686,7 +692,14 @@
 
                 try {
                     const draft = JSON.parse(storage.getItem(draftKey) || 'null');
-                    if (!draft?.values) return;
+                    if (!draft?.values || !draft.savedAt) return;
+
+                    if (Date.now() - new Date(draft.savedAt).getTime() > draftTtlMs) {
+                        storage.removeItem(draftKey);
+                        updateDraftStatus();
+
+                        return;
+                    }
 
                     draftFields().forEach((field) => {
                         if (!Object.prototype.hasOwnProperty.call(draft.values, field.name)) return;
@@ -717,6 +730,13 @@
                     ? ['border-emerald-200', 'bg-emerald-50', 'text-emerald-800']
                     : ['border-amber-200', 'bg-amber-50', 'text-amber-800']));
                 message.textContent = text;
+            };
+
+            const setSubmissionError = (text = '') => {
+                if (!submissionError) return;
+
+                submissionError.textContent = text;
+                submissionError.classList.toggle('hidden', text === '');
             };
 
             const formatFileSize = (bytes) => {
@@ -942,9 +962,18 @@
                     },
                 });
 
-                const html = await response.text();
+                if (!response.ok) {
+                    throw new Error(`Submission failed with status ${response.status}.`);
+                }
 
-                removeDraft();
+                const html = await response.text();
+                const responseUrl = new URL(response.url || form.action, window.location.href);
+                const submitted = responseUrl.pathname.startsWith('/emergency-travel-certificate/status/');
+
+                if (submitted) {
+                    removeDraft();
+                }
+
                 document.open();
                 document.write(html);
                 document.close();
@@ -1017,8 +1046,17 @@
             form?.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
+                const submitButton = event.submitter;
+                const originalLabel = submitButton?.textContent;
+                setSubmissionError();
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Submitting...';
+                }
+
                 try {
-                    await submitFormWithCompressedImages(event.submitter);
+                    await submitFormWithCompressedImages(submitButton);
                 } catch (_) {
                     imageCompressionInputs.forEach((input) => {
                         const file = input.files?.[0];
@@ -1027,6 +1065,13 @@
                             setCompressionStatus(input, 'Image upload could not be prepared. Re-select the image and try again.', 'error');
                         }
                     });
+
+                    setSubmissionError('The office entry could not be submitted. Your draft is still available in this tab. Check the connection and try again.');
+                } finally {
+                    if (submitButton?.isConnected) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalLabel;
+                    }
                 }
             });
 

@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -169,53 +170,64 @@ class EvisaApplicationController extends Controller
             }
         }
 
-        $validated['passport_biodata_image_path'] = $request
-            ->file('passport_biodata_image')
-            ->store('etc/passports', 'local');
+        $storedPaths = [];
 
-        $validated['applicant_photo_path'] = $request
-            ->file('applicant_photo')
-            ->store('etc/applicant-photos', 'local');
+        try {
+            $validated['passport_biodata_image_path'] = $request
+                ->file('passport_biodata_image')
+                ->store('etc/passports', 'local');
+            $storedPaths[] = $validated['passport_biodata_image_path'];
 
-        if ($request->hasFile('booking_confirmation_image')) {
-            $validated['booking_confirmation_image_path'] = $request
-                ->file('booking_confirmation_image')
-                ->store('etc/bookings', 'local');
+            $validated['applicant_photo_path'] = $request
+                ->file('applicant_photo')
+                ->store('etc/applicant-photos', 'local');
+            $storedPaths[] = $validated['applicant_photo_path'];
+
+            if ($request->hasFile('booking_confirmation_image')) {
+                $validated['booking_confirmation_image_path'] = $request
+                    ->file('booking_confirmation_image')
+                    ->store('etc/bookings', 'local');
+                $storedPaths[] = $validated['booking_confirmation_image_path'];
+            }
+
+            $validated['travel_history'] = [
+                'applicant_category' => $validated['applicant_category'],
+                'regional_category' => $validated['regional_category'],
+                'destination_country' => $validated['destination_country'],
+                'countries_visited_last_five_years' => $validated['travel_history_countries'] ?? null,
+                'previous_sierra_leone_visit' => $validated['previous_sierra_leone_visit'] ?? null,
+                'previous_sierra_leone_visit_details' => $validated['previous_sierra_leone_visit_details'] ?? null,
+            ];
+
+            $validated['immigration_history'] = [
+                'previous_visa_refusal' => $validated['previous_visa_refusal'] ?? null,
+                'previous_visa_refusal_details' => $validated['previous_visa_refusal_details'] ?? null,
+                'previous_deportation' => $validated['previous_deportation'] ?? null,
+                'previous_deportation_details' => $validated['previous_deportation_details'] ?? null,
+            ];
+
+            $validated['security_declarations'] = [
+                'criminal_conviction' => $validated['criminal_conviction'] ?? null,
+                'criminal_conviction_details' => $validated['criminal_conviction_details'] ?? null,
+                'security_or_watchlist_issue' => $validated['security_or_watchlist_issue'] ?? null,
+                'security_or_watchlist_issue_details' => $validated['security_or_watchlist_issue_details'] ?? null,
+                'infectious_disease_risk' => $validated['infectious_disease_risk'] ?? null,
+                'infectious_disease_risk_details' => $validated['infectious_disease_risk_details'] ?? null,
+            ];
+
+            $validated['applicant_certification_ip'] = $request->ip();
+            $validated['created_by'] = $request->user()?->id;
+            $validated['submitted_by'] = $request->user()?->id;
+            $validated['passport_biodata_capture_device'] = 'office-assisted-capture';
+
+            $validated = array_merge($validated, $this->submittedMrzPayload($validated));
+
+            $application = $service->handle($validated);
+        } catch (Throwable $exception) {
+            Storage::disk('local')->delete($storedPaths);
+
+            throw $exception;
         }
-
-        $validated['travel_history'] = [
-            'applicant_category' => $validated['applicant_category'],
-            'regional_category' => $validated['regional_category'],
-            'destination_country' => $validated['destination_country'],
-            'countries_visited_last_five_years' => $validated['travel_history_countries'] ?? null,
-            'previous_sierra_leone_visit' => $validated['previous_sierra_leone_visit'] ?? null,
-            'previous_sierra_leone_visit_details' => $validated['previous_sierra_leone_visit_details'] ?? null,
-        ];
-
-        $validated['immigration_history'] = [
-            'previous_visa_refusal' => $validated['previous_visa_refusal'] ?? null,
-            'previous_visa_refusal_details' => $validated['previous_visa_refusal_details'] ?? null,
-            'previous_deportation' => $validated['previous_deportation'] ?? null,
-            'previous_deportation_details' => $validated['previous_deportation_details'] ?? null,
-        ];
-
-        $validated['security_declarations'] = [
-            'criminal_conviction' => $validated['criminal_conviction'] ?? null,
-            'criminal_conviction_details' => $validated['criminal_conviction_details'] ?? null,
-            'security_or_watchlist_issue' => $validated['security_or_watchlist_issue'] ?? null,
-            'security_or_watchlist_issue_details' => $validated['security_or_watchlist_issue_details'] ?? null,
-            'infectious_disease_risk' => $validated['infectious_disease_risk'] ?? null,
-            'infectious_disease_risk_details' => $validated['infectious_disease_risk_details'] ?? null,
-        ];
-
-        $validated['applicant_certification_ip'] = $request->ip();
-        $validated['created_by'] = $request->user()?->id;
-        $validated['submitted_by'] = $request->user()?->id;
-        $validated['passport_biodata_capture_device'] = 'office-assisted-capture';
-
-        $validated = array_merge($validated, $this->submittedMrzPayload($validated));
-
-        $application = $service->handle($validated);
 
         return redirect()->route('etc.status', $application->public_access_token)
             ->with('success', 'Office-assisted Emergency Travel Certificate request submitted. Continue to WanGov/GovPay payment.');

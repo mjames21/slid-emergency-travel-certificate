@@ -14,7 +14,7 @@
         $statusClasses = match (strtolower($publicStatus)) {
             'valid' => 'border-green-200 bg-green-50 text-green-800',
             'expired' => 'border-amber-200 bg-amber-50 text-amber-800',
-            'revoked' => 'border-red-200 bg-red-50 text-red-800',
+            'revoked', 'cancelled', 'invalid' => 'border-red-200 bg-red-50 text-red-800',
             default => 'border-blue-200 bg-blue-50 text-blue-800',
         };
     @endphp

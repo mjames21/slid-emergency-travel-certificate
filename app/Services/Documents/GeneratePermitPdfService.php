@@ -1,7 +1,5 @@
 <?php
 
-// FILE: app/Services/Documents/GeneratePermitPdfService.php
-
 namespace App\Services\Documents;
 
 use App\Models\Permit;
@@ -52,11 +50,13 @@ class GeneratePermitPdfService
 
         Storage::disk('local')->put($path, $pdf->output());
 
+        $isDuplicatePrint = $isReprint || $permit->print_count > 0;
+
+        $permit->increment('print_count');
         $permit->update([
             'document_path' => $path,
-            'print_count' => $permit->print_count + 1,
             'last_printed_at' => now(),
-            'is_duplicate_print' => $isReprint || $permit->print_count > 0,
+            'is_duplicate_print' => $isDuplicatePrint,
         ]);
 
         if ($printedBy) {

@@ -1,12 +1,10 @@
 <?php
 
-// FILE: app/Http/Controllers/VerifyPermitController.php
-
 namespace App\Http\Controllers;
 
+use App\Enums\PermitVerificationResult;
 use App\Models\Permit;
 use App\Services\Verification\VerifyPermitService;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -33,35 +31,19 @@ class VerifyPermitController extends Controller
             'searchedPermit' => $searchedPermit,
             'permit' => $searchedPermit,
             'notices' => [],
-            'publicStatus' => $this->resolvePublicStatus($searchedPermit),
+            'publicStatus' => $this->statusLabel($result['result']),
         ]);
     }
 
-    protected function resolvePublicStatus(Permit $permit): string
+    private function statusLabel(PermitVerificationResult $result): string
     {
-        $status = strtolower($permit->status->value);
-
-        if ($status === 'revoked') {
-            return 'Revoked';
-        }
-
-        if ($this->isExpired($permit)) {
-            return 'Expired';
-        }
-
-        return 'Valid';
-    }
-
-    protected function isExpired(Permit $permit): bool
-    {
-        if (! $permit->valid_until) {
-            return false;
-        }
-
-        try {
-            return Carbon::parse($permit->valid_until)->endOfDay()->isPast();
-        } catch (\Throwable $e) {
-            return false;
-        }
+        return match ($result) {
+            PermitVerificationResult::Cancelled => 'Cancelled',
+            PermitVerificationResult::Revoked => 'Revoked',
+            PermitVerificationResult::Expired => 'Expired',
+            PermitVerificationResult::Valid => 'Valid',
+            PermitVerificationResult::Invalid => 'Invalid',
+            PermitVerificationResult::NotFound => 'Not Found',
+        };
     }
 }

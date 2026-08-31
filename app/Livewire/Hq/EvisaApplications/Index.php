@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
+use RuntimeException;
+use Throwable;
 
 class Index extends Component
 {
@@ -28,6 +31,7 @@ class Index extends Component
 
     public string $paymentReceiptNumber = '';
 
+    #[Locked]
     public int $perPage = 20;
 
     public ?string $message = null;
@@ -68,6 +72,14 @@ class Index extends Component
         $this->paymentLookup = trim($this->paymentLookup);
         $this->paymentReceiptNumber = trim($this->paymentReceiptNumber);
 
+        $user = Auth::user();
+
+        if (! ApproveOnlineEvisaApplicationService::canIssue($user)) {
+            $this->error = 'Only an ETC Issuer can record payment and issue Emergency Travel Certificates.';
+
+            return;
+        }
+
         Validator::make([
             'paymentLookup' => $this->paymentLookup,
             'paymentReceiptNumber' => $this->paymentReceiptNumber,
@@ -85,14 +97,6 @@ class Index extends Component
             'paymentReceiptNumber.unique' => 'This receipt number has already been recorded.',
         ])->validate();
 
-        $user = Auth::user();
-
-        if (! ApproveOnlineEvisaApplicationService::canIssue($user)) {
-            $this->error = 'Only an ETC Issuer can record payment and issue Emergency Travel Certificates.';
-
-            return;
-        }
-
         $application = $this->applicationForPaymentLookup($this->paymentLookup);
 
         if (! $application) {
@@ -107,13 +111,24 @@ class Index extends Component
             return;
         }
 
-        $payment = $service->handle($application, [
-            'gateway' => 'wangov',
-            'gateway_transaction_id' => $this->paymentReceiptNumber,
-            'gateway_reference' => $application->latestInvoice?->payment_reference,
-            'payment_channel' => 'office_receipt',
-            'recorded_by' => $user?->id,
-        ]);
+        try {
+            $payment = $service->handle($application, [
+                'gateway' => 'wangov',
+                'gateway_transaction_id' => $this->paymentReceiptNumber,
+                'gateway_reference' => $application->latestInvoice?->payment_reference,
+                'payment_channel' => 'office_receipt',
+                'recorded_by' => $user?->id,
+            ]);
+        } catch (RuntimeException $exception) {
+            $this->error = $exception->getMessage();
+
+            return;
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error = 'Payment could not be recorded. Check the request and receipt number, then try again.';
+
+            return;
+        }
 
         $this->paymentLookup = '';
         $this->paymentReceiptNumber = '';
@@ -128,13 +143,6 @@ class Index extends Component
         $this->reset(['message', 'error']);
         $this->receiptNumber = trim($this->receiptNumber);
 
-        $this->validate([
-            'receiptNumber' => ['required', 'string', 'max:120'],
-        ], [
-            'receiptNumber.required' => 'Enter the WanGov/GovPay receipt number.',
-            'receiptNumber.max' => 'Receipt number is too long.',
-        ]);
-
         $user = Auth::user();
 
         if (! ApproveOnlineEvisaApplicationService::canIssue($user)) {
@@ -142,6 +150,13 @@ class Index extends Component
 
             return;
         }
+
+        $this->validate([
+            'receiptNumber' => ['required', 'string', 'max:120'],
+        ], [
+            'receiptNumber.required' => 'Enter the WanGov/GovPay receipt number.',
+            'receiptNumber.max' => 'Receipt number is too long.',
+        ]);
 
         $application = $this->applicationForReceipt($this->receiptNumber);
 
@@ -161,9 +176,11 @@ class Index extends Component
             $permit = $service->handle($application, $user);
             $this->receiptNumber = '';
             $this->message = 'Generated Emergency Travel Certificate '.$permit->permit_no.' from the verified receipt.';
-        } catch (\Throwable $e) {
-            report($e);
-            $this->error = $e->getMessage();
+        } catch (RuntimeException $exception) {
+            $this->error = $exception->getMessage();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error = 'The certificate could not be generated. Verify the payment and try again.';
         }
     }
 
@@ -192,10 +209,12 @@ class Index extends Component
 
         try {
             $permit = $service->handle($application, $user);
-            $this->message = 'Approved, issued, and emailed Emergency Travel Certificate '.$permit->permit_no.' to the traveler.';
-        } catch (\Throwable $e) {
-            report($e);
-            $this->error = $e->getMessage();
+            $this->message = 'Approved and issued Emergency Travel Certificate '.$permit->permit_no.'. Email delivery was recorded separately.';
+        } catch (RuntimeException $exception) {
+            $this->error = $exception->getMessage();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error = 'The certificate could not be generated. Verify the payment and try again.';
         }
     }
 

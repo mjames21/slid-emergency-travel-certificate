@@ -148,6 +148,61 @@ const setupPasswordToggles = () => {
     });
 };
 
+const copyText = async (value) => {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    const copied = document.execCommand('copy');
+    textarea.remove();
+
+    if (!copied) {
+        throw new Error('Clipboard copy failed.');
+    }
+};
+
+const setupLoginDetailsCopy = () => {
+    document.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-login-details-copy]');
+
+        if (!button) {
+            return;
+        }
+
+        const source = document.getElementById(button.dataset.loginDetailsCopy);
+        const label = button.querySelector('[data-copy-label]');
+
+        if (!source || !label) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            await copyText(source.value);
+            label.textContent = button.dataset.successLabel;
+        } catch {
+            label.textContent = button.dataset.errorLabel;
+        } finally {
+            window.setTimeout(() => {
+                if (button.isConnected) {
+                    label.textContent = button.dataset.defaultLabel;
+                    button.disabled = false;
+                }
+            }, 1800);
+        }
+    });
+};
+
 const setupPasskeyRegistration = () => {
     document.querySelectorAll('[data-passkey-registration]').forEach((container) => {
         const button = container.querySelector('[data-passkey-register]');
@@ -245,6 +300,7 @@ const setupPasskeyLogin = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupLoginDetailsCopy();
     setupPasswordToggles();
     setupPasskeyRegistration();
     setupPasskeyLogin();
